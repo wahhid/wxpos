@@ -1,0 +1,49 @@
+
+-- APP INIT --
+*Creating database...
+----------
+In connect ('localhost', 'root', 'pass', 'test_pyPOS')
+Error: OperationalError (2003, "Can't connect to MySQL server on 'localhost' (10061)")
+----------
+*Creating IdManager...
+*Loading modules...
+*(6) modules found: base, currency, customer, stock, user, sales
+*Checking module dependencies...
+*DB Module missing base
+*Creating menu...
+*Importing modules...
+*Extending database...
+*Extending menu...
+----------
+In getAllCurrencies ()
+Query: SELECT id FROM currencies
+Error: NoneType None
+----------
+[ERROR]
+Traceback (most recent call last):
+  File "C:\web\python\projects\wxPython\wxPos0.4\wxPos1.py", line 9, in <module>
+    import pos.app
+  File "C:\web\python\projects\wxPython\wxPos0.4\pos\app.py", line 22, in <module>
+    pos.modules.extendMenu(pos.menu.menu)
+  File "C:\web\python\projects\wxPython\wxPos0.4\pos\modules\__init__.py", line 95, in extendMenu
+    item.loadSubItems()
+  File "C:\web\python\projects\wxPython\wxPos0.4\pos\modules\currency\__init__.py", line 8, in loadSubItems
+    from pos.modules.currency.panels import CurrenciesPanel
+  File "C:\web\python\projects\wxPython\wxPos0.4\pos\modules\currency\panels\__init__.py", line 1, in <module>
+    from .currencies import CurrenciesPanel
+  File "C:\web\python\projects\wxPython\wxPos0.4\pos\modules\currency\panels\currencies.py", line 5, in <module>
+    import pos.modules.currency.objects.currency as currency
+  File "C:\web\python\projects\wxPython\wxPos0.4\pos\modules\currency\objects\currency.py", line 48, in <module>
+    default = find(_id=1)
+  File "C:\web\python\projects\wxPython\wxPos0.4\pos\modules\currency\objects\currency.py", line 44, in <lambda>
+    find = lambda _id=None, list=False, **kwargs: obj.find(list, _id, **kwargs)
+  File "C:\web\python\projects\wxPython\wxPos0.4\pos\modules\base\objects\common.py", line 25, in find
+    results = self.getAll()
+  File "C:\web\python\projects\wxPython\wxPos0.4\pos\modules\base\objects\common.py", line 8, in getAll
+    item_ids = self.dbGetAll()
+  File "C:\web\python\projects\wxPython\wxPos0.4\pos\modules\currency\objects\currency.py", line 19, in <lambda>
+    dbGetAll = lambda self: db.getAllCurrencies()
+  File "C:\web\python\projects\wxPython\wxPos0.4\pos\modules\currency\db\currency.py", line 5, in getAllCurrencies
+    cursor, success = self.db.query('getAllCurrencies', sql, params)
+TypeError: 'NoneType' object is not iterable
+----------
