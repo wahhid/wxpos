@@ -1,0 +1,69 @@
+= MODULES =
+== base ==
+
+=== Content ===
+Base module that provides the most basic functionality of the pos system. It is a base that should be extended by other modules.
+    * idManager: object: Keeps track of given ids to windows in a dict. If a key is missing, it assigns a wx.NewId() to that key.
+    * common: object: Base module for easy connection between database and object. Provides a set of similar functions for deleting, updating, adding and finding items.
+    * manage: panel: Base panel for CRUD operation (new item, delete item, update item, list items)
+
+=== TODO ===
+  * should i implement menu in it? don't think so....
+  * when updating an item, if the data is None, it does not update it (see product->category) coz in db.update functions default is None, and if it is default nothing happens.
+  * if you save without changing anything, it says there is an error
+
+== currency ==
+
+=== Content ===
+Curency module that manages multiple currencies, with their symbols, default currency and conversion between one another
+  * currency: db: Stores and retrieves the currency name, symbol, and value. The value is relative to another currencie's. ex: 1500 LL = 1$ => LL value=1; $ value=1500x1 = 1500
+  * currency: object: Allows conversion between units, retreiving the default one and all the other functionality of the currency module.
+  * currencies: panel: UI based on managePanel that allows to editing of value and name and symbol of the currencies. No deletion allowed.
+
+=== TODO ===
+  * should i only allow one currency which is the default one
+  * add the ability to change the default currency
+
+## customer: A customer might be a person or a company that frequently purchases from the company. Discounts may be associated to it, debts, and periodic bill payments.
+	customer	db	Stores and retrieves customer info, contact details and address details.
+	customergroup	db	Stores and retrieves the name of the group of customers and a comment about it.
+	customer	object	Object facade to the db. Based on the common object
+	customergroup	object	Object facade to the db. Based on the common object
+	customers	panel	Manage Panel to the customers (list, add, delete, edit)
+	customergroups	panel	Manage Panel to the groups.
+** customerdiscount: discount, product_id, customer_id; might be useful (like in posper)
+
+## user: A user is a person who can login and use the application. Every one of them has a password, a role, and specific permissions that limit its use of it.
+	user		db	Username, password
+	role		db	Name, list of permissions
+	permission	db	Name, description of what is allowed to do with that one.
+	user,role,	object	Based on common facade to the relative db objects.
+	   permission
+	users, roles,
+	   permissions	panel	Based on ManagePanel. Allow management of users, their roles, their permissions.
+	user		panel	Alllows lmited editing of the currently logged in user by himself.
+
+## stock: Provides functionality for adding and removing products that can be sold in the shop. These can be grouped in nested(or not) categories.
+	category	db	Name, parent category.
+	product		db	Name, description, price, currency, code, reference, quantity, category
+	category, 	object	Facade to the corresponding db items.
+	   product
+	categories,	panel	Based on ManagePanel. Allow management of categories and products.
+	   products
+** add ability to choose if this product is in stock("stockable") or not (e.g. newspaper, photocopie, whatever)
+** add ability to set buy price, sell price, taxes (like posper)
+** stock diary (products bought ...)
+
+## sales: Provides the ability to create tickets and sell items to clients and customers with browsable categories and products.
+	ticket		db/obj	list of lines of sold items (which can and can not be based on products)
+	ticketline	db/obj	line which contains a description of what is sold, price and amount.
+	main		panel	Main panel in which is available a catalog, a ticketline list and ticket manipulation actions.
+** Print functionality
+** Cash drawer functionality
+** Cash register functionality (close cash): cash difference, date open date close, user, etc...
+
+** payment: Provides the ability to add shop payments made for maintenance, salaries, stock buying or other expenses or incomes to keep track of cash flow.
+
+** report: Provides the abilty to generate reports of stock, payments, etc. on specific time period.
+
+** taxes: Useless for now.
