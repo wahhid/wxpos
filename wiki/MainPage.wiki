@@ -1,8 +1,20 @@
-#summary One-sentence summary of this page.
+#summary Main Page for the documentation.
 
 = Introduction =
 
-Add your content here.
+wxpos is a pos software that should support the use of:
+  * Barcode readers
+  * Receipt printers
+  * Cash drawers
+  * Stock maintenance
+  * Daily/Monthly/Weekly reports of sold products
+  * Customer listing
+  * And many more functions that should be easily added based on the need
 
+= Idea =
 
-= Details =
+wxpos is made with Python, using wxPython (subset of wxWidgets).
+  * [http://python.org Python] is used because it is cross-platform mainly.
+  * [http://www.wxpython.org/ wxPython] is used for the GUI (graphical user interface) because it is also cross-platform, and provides a native look on any platform.
+
+wxpos is designed to be easily migrated to any database system (although currently it is only working with MySQL, it "should" be easy to change it)
