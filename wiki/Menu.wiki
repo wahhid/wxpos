@@ -1,0 +1,26 @@
+= MENU =
+  * Main
+    * Sales
+    * (TODO) Close cash
+    * (TODO) Payments
+  * Customers
+    * Customers
+    * Customer Groups
+    * (TODO) Customer Discounts
+  * (TODO) Reports
+    * Stock
+    * Sales
+    * Close cash
+  * Users
+    * Users
+    * Roles
+    * Permissions
+  * Stock
+    * Products
+    * Categories
+    * (TODO) Stock diary
+  * System
+    * (TODO) Configuration
+    * Currencies
+  * Administration
+    * User
