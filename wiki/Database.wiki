@@ -1,0 +1,18 @@
+#summary Configuring and using the database
+
+= Introduction =
+
+wxpos is designed to be database independent. Currently it is working with MySQL.
+In the pos/db directory, there are currently 4 files:
+  * base: defines the BaseDB class, which defines the base methods of the DB object: connect, close, error.
+  * mysql: defines MysqlDB which inherits from BaseDB and defines the methods for connection, query execution, error handling...
+  * __init__: defines the DB class, the actual class that will be used. It inherits from MysqlDB in this case.
+  * subset: The class defined here is the base class of the modules' db part. It is kind of a way of "subclassing" the main DB class.
+
+
+NOTE: The db module is still not stable, so the subset might be useless, and maybe this is not the way of doing it.
+
+= Configuring MySQL =
+
+In pos/db/__init__.py, in the definition of the DB class, the host/username/password/db_name are defined in the __init__ method.
+Change those values to suit your needs.
