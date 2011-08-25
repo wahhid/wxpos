@@ -5,6 +5,8 @@ import pos.modules.base.objects.common as common
 
 import pos.modules.user.objects.user as user
 
+import pos.modules.customer.objects.customer as customer
+
 class Ticket(common.Item):
     data_keys = ('user', 'closed')
     
@@ -20,6 +22,11 @@ class Ticket(common.Item):
 
     def close(self):
         success = db.closeTicket(self.id)
+        getAll(refresh=True)
+        return bool(success)
+
+    def setCustomer(self, c):
+        success = db.setTicketCustomer(self.id, c.id)
         getAll(refresh=True)
         return bool(success)
 

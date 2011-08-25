@@ -10,4 +10,4 @@ class ModuleMenu(ModuleMenuBase):
         MenuItem(self.menu, "Main", "Sales", SalesPanel, 'sales')
         #MenuItem(self.menu, "Main", "Orders", EmptyPanel, 'sales')
 
-dependencies = ('base', 'user', 'stock')
+dependencies = ('base', 'user', 'stock', 'customer')
