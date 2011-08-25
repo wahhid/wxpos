@@ -12,8 +12,10 @@ def config(db):
          comment varchar(255) DEFAULT NULL,
          date_open DATETIME DEFAULT NULL,
          date_close DATETIME DEFAULT NULL,
+         customer_id int DEFAULT NULL,
          user_id int NOT NULL,
          state int NOT NULL DEFAULT 1,
+         FOREIGN KEY (customer_id) REFERENCES customers(id),
          FOREIGN KEY (user_id) REFERENCES users(id)
     """)
     

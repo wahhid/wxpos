@@ -10,8 +10,8 @@ class TicketDB:
             return None
 
     def insertTicket(self, user_id):
-        sql = "INSERT INTO tickets (comment, date_open, user_id) VALUES (%s, NOW(), %s)"
-        params = ('[NO COMMENT]', user_id)
+        sql = "INSERT INTO tickets (date_open, user_id) VALUES (NOW(), %s)"
+        params = (user_id,)
         cursor, success = self.db.query('insertTicket', sql, params)
         if success:
             ticket_id = self.conn.insert_id()
@@ -36,7 +36,51 @@ class TicketDB:
             return (cursor.rowcount == 1)
         else:
             return None
-    
+
+    def setTicketComment(self, ticket_id, comment):
+        sql = "UPDATE tickets SET comment=%s WHERE id=%s"
+        params = (comment, ticket_id,)
+        cursor, success = self.db.query('setTicketComment', sql, params)
+        if success:
+            return (cursor.rowcount == 1)
+        else:
+            return None
+
+    def setTicketCustomer(self, ticket_id, customer_id):
+        sql = "UPDATE tickets SET customer_id=%s WHERE id=%s"
+        params = (customer_id, ticket_id,)
+        cursor, success = self.db.query('setTicketCustomer', sql, params)
+        if success:
+            return (cursor.rowcount == 1)
+        else:
+            return None
+
+    def getTicketComment(self, ticket_id):
+        sql = "SELECT comment FROM tickets WHERE id=%s"
+        params = (ticket_id,)
+        cursor, success = self.db.query('getTicketComment', sql, params)
+        if success:
+            results = cursor.fetchone()
+            if len(results)>0:
+                return results[0]
+            else:
+                return None
+        else:
+            return None
+
+    def getTicketCustomer(self, ticket_id):
+        sql = "SELECT customer_id FROM tickets WHERE id=%s"
+        params = (ticket_id,)
+        cursor, success = self.db.query('getTicketCustomer', sql, params)
+        if success:
+            results = cursor.fetchone()
+            if len(results)>0:
+                return results[0]
+            else:
+                return None
+        else:
+            return None
+
     def ticketIsClosed(self, ticket_id):
         sql = "SELECT (date_close IS NOT NULL) as 'closed' FROM tickets WHERE id=%s"
         params = (ticket_id,)

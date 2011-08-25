@@ -2,6 +2,8 @@ import wx
 
 import pos.modules.user.objects.user as user
 
+import pos.modules.customer.objects.customer as customer
+
 import pos.modules.stock.objects.category as category
 import pos.modules.stock.objects.product as product
 
@@ -31,6 +33,7 @@ class SalesPanel(wx.Panel):
         self.tActionSizer.Add(self.ticketChoice, 0, border=3, flag=wx.ALL | wx.EXPAND)
         self.tActionSizer.Add(self.closeBtn, 0, border=3, flag=wx.ALL | wx.EXPAND)
         self.tActionSizer.Add(self.cancelBtn, 0, border=3, flag=wx.ALL | wx.EXPAND)
+        self.tActionSizer.Add(self.customerChoice, 0, border=3, flag=wx.ALL | wx.EXPAND)
 
         self.mainSizer = wx.GridBagSizer(hgap=0, vgap=0)
         self.mainSizer.AddSizer(self.tlActionSizer, (1, 0), (1, 1))
@@ -98,6 +101,9 @@ class SalesPanel(wx.Panel):
         self.ticketChoice = TicketChoice(self)
         self.ticketChoice.Bind(wx.EVT_CHOICE, self.OnTicketChoice)
 
+        self.customerChoice = CustomerChoice(self)
+        self.customerChoice.Bind(wx.EVT_CHOICE, self.OnCustomerChoice)
+
         self._init_ctrls()
         
         self.catalogList = CatalogList(self)
@@ -114,6 +120,7 @@ class SalesPanel(wx.Panel):
         self.enableTicketlineActions(False)
 
         self.ticketChoice.updateList()
+        self.customerChoice.updateList()
 
     def setCurrentTicket(self, t):
         if t is None:
@@ -173,6 +180,13 @@ class SalesPanel(wx.Panel):
         event.Skip()
         t = self.ticketChoice.getCurrentTicket()
         self.setCurrentTicket(t)
+
+    def OnCustomerChoice(self, event):
+        event.Skip()
+        c = self.customerChoice.getCurrentCustomer()
+        t = self._doCheckCurrentTicket()
+        if t and c is not None:
+            t.setCustomer(c)
     
     def OnNewButton(self, event):
         event.Skip()
@@ -290,6 +304,35 @@ class TicketChoice(wx.Choice):
         for t in ts:
             ch = self.getTicketLabel(t)
             self.__tickets[ch] = t
+            choices.append(ch)
+        self.SetItems(choices)
+
+class CustomerChoice(wx.Choice):
+    def __init__(self, parent):
+        wx.Choice.__init__(self, parent, -1)
+
+        self.__customers = {}
+
+    def setCurrentCustomer(self, c):
+        self.SetStringSelection(self.getCustomerLabel(c))
+
+    def getCurrentCustomer(self):
+        ch = self.GetStringSelection()
+        try:
+            return self.__customers[ch]
+        except KeyError:
+            return None
+
+    def getCustomerLabel(self, c):
+        return '%s' % (c.data['name'],)
+
+    def updateList(self):
+        choices = []
+        self.__customers = {}
+        cs = customer.find(list=True)
+        for c in cs:
+            ch = self.getCustomerLabel(c)
+            self.__customers[ch] = c
             choices.append(ch)
         self.SetItems(choices)
 
