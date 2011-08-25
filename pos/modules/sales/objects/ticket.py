@@ -8,7 +8,7 @@ import pos.modules.user.objects.user as user
 import pos.modules.customer.objects.customer as customer
 
 class Ticket(common.Item):
-    data_keys = ('user', 'closed')
+    data_keys = ('user', 'closed', 'customer')
     
     def __init__(self, _id):
         common.Item.__init__(self, _id)
@@ -19,6 +19,12 @@ class Ticket(common.Item):
         self.data['user'] = user.find(_id=user_id)
 
         self.data['closed'] = db.ticketIsClosed(self.id)
+
+        customer_id = db.getTicketCustomer(self.id)
+        if customer_id is None:
+            self.data['customer'] = None
+        else:
+            self.data['customer'] = customer.find(_id=customer_id)
 
     def close(self):
         success = db.closeTicket(self.id)

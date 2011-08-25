@@ -28,10 +28,43 @@ class TicketList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, ListRowHighlighter
         
         #listmix.CheckListCtrlMixin.__init__(self)
         #listmix.TextEditMixin.__init__(self)
-        
+
+        self.ticket = None
         self.lines = []
         for col, text in enumerate(self.columns):
             self.InsertColumn(col, text)
+
+    # Product to Line manipulation
+    def addProductLine(self, p):
+        sell_price = currency.convert(p.data['price'],
+                                      p.data['currency'], currency.default)
+        tl = ticketline.add(description=p.data['name'],
+                            sell_price=sell_price,
+                            amount=1,
+                            ticket=self.ticket,
+                            product=p,
+                            is_edited=False)
+        self.updateList(self.ticket)
+        index = self.findLine(tl)
+        self.Select(index, True)
+
+    def editLine(self, tl, data):
+        p = tl.data['product']
+        if not tl.data['is_edited'] and p is not None:
+            description_edited = tl.data['description'] != data['description']
+            price_edited = tl.data['sell_price'] != data['sell_price']
+            data.update({'is_edited': (description_edited and price_edited)})
+            tl.update(**data)
+        else:
+            tl.update(**data)
+        self.updateList(t, select=True)
+
+    def getTotal(self):
+        tls = ticketline.find(list=True, ticket=self.ticket)
+        total = 0
+        for tl in tls:
+            total += tl.data['amount']*tl.data['sell_price']
+        return total
 
     # Selection
     def getSelectedLines(self):
@@ -70,12 +103,7 @@ class TicketList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, ListRowHighlighter
 
     def getItemsFromLine(self, tl):
         description = tl.data['description']
-        p = tl.data['product']
-        if p is None:
-            sell_price = tl.data['sell_price']
-        else:
-            sell_price = currency.convert(tl.data['sell_price'],
-                            p.data['currency'], currency.default)
+        sell_price = tl.data['sell_price']
         amount = tl.data['amount']
         currency_symbol = currency.default.data['symbol']
         items = [description,
@@ -91,6 +119,7 @@ class TicketList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, ListRowHighlighter
         else:
             selected_tl = None
         self.clearLines()
+        self.ticket = t
         tls = ticketline.find(list=True, ticket=t)
         for tl in tls:
             self.addLine(tl)
