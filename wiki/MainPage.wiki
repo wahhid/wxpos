@@ -29,7 +29,7 @@ There are three files in the "trunk" directory:
 The pos directory is the main python module used for the wxpos software.
 The files in pos directory describe themselves by their names.
 The directories are as following:
-  * pos/modules/ Discussed in Modules
+  * pos/modules/ Discussed in [Modules]
   * pos/db/ Discussed in Database
   * pos/menu/ Contains the base classes for the menu, menu root items, and sub items. The functionality is there. The menu items are created from within the __init__.py file of the module itself. See the pos/modules/base/__init__.py of "base" module and pos/modules/user/__init__.py of "user" module for usage examples.
   * pos/images/ Contains two directories menu and commands: menu contains icons of the menu entries, and commands some icons for the common actions of the different modules. The images directory should be changed and especially the menu directory, because the images directory should not depend on any module. In the future, there would be an images directory in each module directory maybe...
