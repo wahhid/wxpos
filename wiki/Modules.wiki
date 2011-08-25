@@ -1,4 +1,19 @@
 = Modules =
+
+A wxpos module is a part of the software which has a specific role in it: as "user" that gives the ability to login to the software or "stock" that allows the user to keep track of his stock, etc... Got the idea?
+
+It is a directory in the pos/modules/ directory which can/must contain the following elements: (suppose the name of the module [modulename]
+  * pos/modules/[modulename]/__init__.py that defines the dependencies tuple (that contains a list of other modules on which it depends) and a ModuleMenu class (which defines the menu items this module should have in the menu)
+  * pos/modules/[modulename]/db/ A python module that would define a ModuleDB class that defines Database functions that can be applied to make the module work. Plus a config function that creates the database/tables or files or whatever (here it also adds the default values to db, but shouldn't)
+  * pos/modules/[modulename]/objects/ A python module, most usually based on the "base" module objects that defines an interface to the database system, it is present as a way of making the software database independent. That might be the wrong way of doing it, but yeah.. it's working, so .... Anyway see the pos/modules/base/objects/common.py and the pos/modules/user/objects/user.py for ex to understand it, it's not that complicated...
+  * pos/modules/[modulename]/panels/ Contains the panels used in the main toolbook of the app frame. That means every menu item should have a panel defined in that python module associated with it, as the the app frame contains essentially only a wx.Toolbook whose pages are the menu items and the panels to which each one is associated...
+  * pos/modules/[modulename]/dialogs/ Contains the dialogs that could be used for the functionality of the module to be complete...
+
+That structure is recommended but not required. One thing is absolutely required: the dependencies tuple, even if it is empty...
+So, there might be no db module, no db config, no objects or no panels directories. But what would there be then ? right ? That is why it is recommended to follow that structure. But still it's completely up to you, and anyway that is what is followed by all those modules already done.
+
+That is a list of all modules done and to be done:
+
 == BASE ==
 
 === Content ===
@@ -12,6 +27,8 @@ Base module that provides the most basic functionality of the pos system. It is 
   * when updating an item, if the data is None, it does not update it (see product->category) coz in db.update functions default is None, and if it is default nothing happens.
   * if you save without changing anything, it says there is an error
 
+
+
 == CURRENCY ==
 
 === Content ===
@@ -23,6 +40,8 @@ Curency module that manages multiple currencies, with their symbols, default cur
 === TODO ===
   * should i only allow one currency which is the default one
   * add the ability to change the default currency
+
+
 
 == CUSTOMER ==
 
@@ -38,6 +57,8 @@ A customer might be a person or a company that frequently purchases from the com
 === TODO ===
   * customerdiscount: discount(0%-100%), product, customer
 
+
+
 == USER ==
 
 === Content ===
@@ -51,6 +72,8 @@ A user is a person who can login and use the application. Every one of them has 
 
 === TODO ===
 Done.
+
+
 
 == STOCK ==
 
@@ -66,6 +89,8 @@ Provides functionality for adding and removing products that can be sold in the 
   * add ability to set buy price, sell price, taxes (like posper)
   * stock diary (products bought ...)
 
+
+
 == SALES ==
 
 === Content ===
@@ -79,6 +104,8 @@ Provides the ability to create tickets and sell items to clients and customers w
   * Cash drawer functionality
   * Cash register functionality (close cash): cash difference, date open date close, user, etc...
 
+
+
 == PAYMENT ==
 
 === Content ===
@@ -87,6 +114,8 @@ Provides the ability to add shop payments made for maintenance, salaries, stock 
 === TODO ===
 Not done yet.
 
+
+
 == REPORT ==
 
 === Content ===
@@ -94,6 +123,8 @@ Provides the abilty to generate reports of stock, payments, etc. on specific tim
 
 === TODO ===
 Not done yet.
+
+
 
 == TAXES ==
 
