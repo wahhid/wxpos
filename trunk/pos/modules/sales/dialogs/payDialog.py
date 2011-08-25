@@ -4,7 +4,7 @@ import pos.modules.sales.objects.ticketline as ticketline
 
 from pos.modules.base.objects.idManager import ids
 
-from .ticketList import TicketList
+from ..panels.main.ticketList import TicketList
 
 class PayDialog(wx.Dialog):
     def __init_ctrls(self):
