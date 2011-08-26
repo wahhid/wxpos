@@ -67,17 +67,28 @@ class CatalogList(wx.ListCtrl):
             if self.__current is not None:
                 self.__tree.append(self.__current)
             self.updateList(item)
+        elif image_id == 3:
+            if self.__current is not None:
+                self.__tree.append(self.__current)
+            self.updateList('All')
 
     def getChildren(self, parent):
         return [[], []]
 
     def updateList(self, parent):
         self.__current = parent
-        children = self.getChildren(parent)
+        if parent == 'All':
+            children = [[], self.getAll()]
+        else:
+            children = self.getChildren(parent)
 
         self.clearCatalog()
         _last_index = -1
-        if parent is not None:
+        if parent is None:
+            _last_index += 1
+            self.InsertImageStringItem(_last_index, '[All]', 0)
+            self.__view.append((None, 3))
+        else:
             _last_index += 1
             self.InsertImageStringItem(_last_index, '[Up]', 2)
             self.__view.append((None, 2))
@@ -88,6 +99,11 @@ class CatalogList(wx.ListCtrl):
                 self.__view.append((item, image_id))
 
 class ProductCatalogList(CatalogList):
+    def getAll(self):
+        products = product.find(list=True)
+        files = map(lambda p: (p, p.data['name']), products)
+        return files
+    
     def getChildren(self, parent):
         children_categories = category.find(list=True, parent_category=parent)
         children_products = product.find(list=True, category=parent)
@@ -96,11 +112,20 @@ class ProductCatalogList(CatalogList):
                 map(lambda p: (p, p.data['name']), children_products)]
 
 class CustomerCatalogList(CatalogList):
+    def getAll(self):
+        customers = customer.find(list=True)
+        files = map(lambda c: (c, c.data['name']), customers)
+        return files
+        
     def getChildren(self, parent):
         children_groups = customergroup.find(list=True) if parent is None else []
+        folders = map(lambda cg: (cg, cg.data['name']), children_groups)
 
-        customers = customer.find(list=True)
-        children_customers = filter(lambda c: parent in c.data['groups'], customers)
+        if parent is None:
+            children_customers = customer.find(list=True, groups=[])
+        else:
+            customers = customer.find(list=True)
+            children_customers = filter(lambda c: parent in c.data['groups'], customers)
+        files = map(lambda c: (c, c.data['name']), children_customers)
 
-        return [map(lambda cg: (cg, cg.data['name']), children_groups),
-                map(lambda c: (c, c.data['name']), children_customers)]
+        return [folders, files]
