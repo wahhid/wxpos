@@ -33,6 +33,7 @@ class Ticket(common.Item):
 
     def setCustomer(self, c):
         success = db.setTicketCustomer(self.id, c.id)
+        self.data['customer'] = c
         getAll(refresh=True)
         return bool(success)
 
