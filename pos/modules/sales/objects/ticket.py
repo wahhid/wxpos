@@ -1,5 +1,4 @@
-import pos.db
-db = pos.db.db
+import pos
 
 import pos.modules.base.objects.common as common
 
@@ -10,55 +9,96 @@ import pos.modules.customer.objects.customer as customer
 class Ticket(common.Item):
     data_keys = ('user', 'closed', 'customer')
     
-    def __init__(self, _id):
-        common.Item.__init__(self, _id)
-        self.obj = obj
-    
     def getData(self):
-        user_id = db.getTicketUser(self.id)
-        self.data['user'] = user.find(_id=user_id)
-
-        self.data['closed'] = db.ticketIsClosed(self.id)
-
-        customer_id = db.getTicketCustomer(self.id)
-        if customer_id is None:
-            self.data['customer'] = None
-        else:
-            self.data['customer'] = customer.find(_id=customer_id)
+        sql = "SELECT comment, user_id, customer_id FROM tickets WHERE id=%s"
+        params = (self.id,)
+        cursor, success = pos.db.query(sql, params)
+        if success:
+            results = cursor.fetchone()
+            if len(results)>0:
+                self.data['comment'], user_id, customer_id = results
+                self.data['user'] = user.find(_id=user_id)
+                if customer_id is None:
+                    self.data['customer'] = None
+                else:
+                    self.data['customer'] = customer.find(_id=customer_id)
+        
+        sql = "SELECT (date_close IS NOT NULL) as 'closed' FROM tickets WHERE id=%s"
+        params = (self.id,)
+        cursor, success = pos.db.query(sql, params)
+        if success:
+            results = cursor.fetchone()
+            if len(results)>0:
+                self.data['closed'] = bool(results[0])
 
     def close(self):
-        success = db.closeTicket(self.id)
-        getAll(refresh=True)
-        return bool(success)
-
-    def setCustomer(self, c):
-        success = db.setTicketCustomer(self.id, c.id)
-        self.data['customer'] = c
-        getAll(refresh=True)
-        return bool(success)
+        import pos.modules.sales.objects.ticketline as ticketline
+        sql = "UPDATE tickets SET date_close=NOW() WHERE id=%s"
+        params = (self.id,)
+        cursor, success = pos.db.query(sql, params)
+        if success and cursor.rowcount == 1:
+            self.obj.getAll(refresh=True)
+            tls = ticketline.find(list=True, ticket=self)
+            for tl in tls:
+                p = tl.data['product']
+                if p is None or not p.data['in_stock']:
+                    continue
+                p.updateQuantity(tl.data['amount'], 'out')
+        else:
+            return None
 
 class TicketObject(common.Object):
     item = Ticket
-    dbGetAll = lambda self: db.getAllTickets()
-    def dbInsert(self, **kwargs):
-        ret = db.insertTicket(user_id=kwargs['user'])
-        return ret
+    def dbGetAll(self):
+        sql = "SELECT id FROM tickets WHERE state>0"
+        params = None
+        cursor, success = pos.db.query(sql, params)
+        if success:
+            results = cursor.fetchall()
+            return map(lambda r: r[0], results)
+        else:
+            return None
+    
+    def dbInsert(self, user_id):
+        sql = "INSERT INTO tickets (date_open, user_id) VALUES (NOW(), %s)"
+        params = (user_id,)
+        cursor, success = pos.db.query(sql, params)
+        if success:
+            _id = pos.db.conn.insert_id()
+            return _id
+        else:
+            return None
     
     def dbUpdate(self, _id, **kwargs):
-        return None
+        fields = ('comment', 'customer_id')
+        update_str = ",".join([f+"=%s" for f in fields if kwargs.has_key(f)])
+        update_params = [kwargs[f] for f in fields if kwargs.has_key(f)]
+        
+        if len(update_str) == 0: return True
+        sql = "UPDATE tickets SET "+update_str+" WHERE id=%s"
+        params = update_params+[_id]
+        cursor, success = pos.db.query(sql, params)
+        if success:
+            return True
+        else:
+            return None
     
     def dbDelete(self, _id):
-        ret = db.deleteTicket(_id)
-        return ret
+        sql = "UPDATE tickets SET state=-1 WHERE id=%s"
+        params = (_id,)
+        cursor, success = pos.db.query(sql, params)
+        if success:
+            return (cursor.rowcount == 1)
+        else:
+            return None
 
     def getDBData(self, key, val):
         if key == 'user':
-            return val.id
+            return 'user_id', val.id
         else:
-            return val
+            return key, val
 
 obj = TicketObject()
 
 find = lambda _id=None, list=False, **kwargs: obj.find(list, _id, **kwargs)
-getAll = lambda refresh=False: obj.getAll()
 add = lambda **kwargs: obj.add(**kwargs)

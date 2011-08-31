@@ -57,7 +57,7 @@ class TicketList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, ListRowHighlighter
             tl.update(**data)
         else:
             tl.update(**data)
-        self.updateList(t, select=True)
+        self.updateList(self.ticket, select=True)
 
     def getTotal(self):
         tls = ticketline.find(list=True, ticket=self.ticket)

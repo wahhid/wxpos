@@ -2,8 +2,8 @@ import traceback, sys, os
 
 os.chdir('./pos')
 try:
-    import pos.config
-    pos.config.run()
+    import pos.dbConfig
+    pos.dbConfig.run()
 except KeyboardInterrupt:
     sys.exit()
 except Exception:
