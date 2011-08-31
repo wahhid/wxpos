@@ -2,9 +2,11 @@ print '-- APP INIT --'
 
 import wx
 
+import pos
+
 print '*Creating database...'
-import pos.db
-pos.db.db = pos.db.DB()
+import pos.database
+pos.db = pos.database.DB()
 
 print '*Creating IdManager...'
 import pos.modules.base.objects.idManager as idManager
@@ -16,31 +18,31 @@ pos.menu.init()
 
 print '*Importing modules...'
 import pos.modules
-print '*Extending database...'
-pos.modules.extendDB(pos.db.db)
 print '*Extending menu...'
 pos.modules.extendMenu(pos.menu.menu)
 
-print '*Importing login dialog'
-import pos.loginDialog
 print '*Importing app frame'
-import pos.appFrame
+from pos.appFrame import AppFrame
 
 class PosApp(wx.App):
     def OnInit(self):
         print '*Loading menu...'
         pos.menu.load()
         print '*Initiating App...'
-        if not self.requireLogin():
-            return False
-        self.main = pos.appFrame.create(None)
+        if pos.modules.isInstalled('user'):
+            print '*Module installed user'
+            print '*Login required'
+            if not self.requireLogin():
+                return False
+        self.main = AppFrame(None)
         print '*Done.'
         self.main.Show()
         self.SetTopWindow(self.main)
         return True
 
     def requireLogin(self):
-        login = pos.loginDialog.create(None)
+        from pos.modules.user.dialogs.loginDialog import LoginDialog
+        login = LoginDialog(None)
         result = login.ShowModal()
         return (result == wx.ID_OK)
 

@@ -142,9 +142,9 @@ class SalesPanel(wx.Panel):
                 style=wx.TAB_TRAVERSAL)
 
         # Accelerator Table: Press F3 to set focus to barcode field
-        #accTable = wx.AcceleratorTable([(wx.ACCEL_NORMAL, wx.WXK_F3, ids['F3Command'])])
-        #self.Bind(wx.EVT_MENU, self.OnF3Command, id=ids['F3Command']) 
-        #self.SetAcceleratorTable(accTable)
+        accTable = wx.AcceleratorTable([(wx.ACCEL_NORMAL, wx.WXK_F3, ids['F3Command'])])
+        self.Bind(wx.EVT_MENU, self.OnF3Command, id=ids['F3Command']) 
+        self.SetAcceleratorTable(accTable)
 
         self._init_main()
         self._init_sizers()
@@ -238,6 +238,9 @@ class SalesPanel(wx.Panel):
         if t and tl:
             new_amount = tl.data['amount']+inc
             if new_amount>0:
+                p = tl.data['product']
+                if p is not None and p.data['in_stock'] and p.data['quantity']<new_amount:
+                    wx.MessageBox('Amount exceeds the product quantity in stock!', 'Warning', wx.OK | wx.ICON_WARNING)
                 tl.update(amount=new_amount)
             else:
                 tl.delete()
@@ -310,18 +313,14 @@ class SalesPanel(wx.Panel):
         if c is not None and image_id == 1:
             t = self._doCheckCurrentTicket()
             if t:
-                t.setCustomer(c)
+                t.update(customer=c)
                 self.customerTxt.SetValue(c.data['name'])
 
     ### Find Product Actions ###
-    #######################################
-    ######################### NOT USED ####
-    #######################################
     def OnF3Command(self, event):
         event.Skip()
         self.codeTxt.SelectAll()
         self.codeTxt.SetFocus()
-    #######################################
 
     def OnCodeEnter(self, event):
         event.Skip()

@@ -1,3 +1,4 @@
+import pos
 import imp, os, sys
 
 def loadModules():
@@ -11,10 +12,13 @@ def loadModules():
     for name in os.listdir(modules_path):
         full_path = os.path.join(modules_path, name)
         if os.path.isdir(full_path):
+            if name.startswith('.'):
+                print '*Ignored module', name
+                continue
             try:
                 _file, pathname, description = imp.find_module(name)
             except ImportError:
-                print '*Invalid Module', name
+                print '*Invalid module', name
             else:
                 module = imp.load_package(name, pathname)
                 modules.append(module)
@@ -42,44 +46,23 @@ def dependencyCmp(m1, m2):
     else:
         return 0
 
-def loadDBModules():
-    modules_db = []
-    for top in modules:
-        top_path = top.__path__[0]
-        sys.path.insert(0, top_path)
-        try:
-            _file, pathname, description = imp.find_module('db')
-        except ImportError:
-            print '*DB Module missing', top.__name__
-        else:
-            db_module = imp.load_package(top.__name__+'.db', pathname)
-            modules_db.append(db_module)
-        sys.path.remove(top_path)
-    return modules_db
+def isInstalled(module_name):
+    return (module_name in [top.__name__ for top in modules])
 
 modules = loadModules()
 checkDependencies()
-modules_db = loadDBModules()
 
-def extendDB(db):
-    for db_module in modules_db:
+def configDB(test):
+    print '*Clearing database...'
+    pos.db.clear()
+    for top in modules:
         try:
-            db_ext = db_module.ModuleDB
+            config = top.configDB
         except AttributeError:
-            print '*DB Extension missing', db_module.__name__
+            print '*DB Config missing', top.__name__
         else:
-            db.extend(db_ext)
-
-def configDB(db):
-    db.clear()
-    for db_module in modules_db:
-        try:
-            config = db_module.config
-        except AttributeError:
-            print '*DB Config missing', db_module.__name__
-        else:
-            print '*Configuring', db_module.__name__
-            config(db)
+            print '*Configuring', top.__name__
+            config(test)
 
 def extendMenu(menu):
     items = []

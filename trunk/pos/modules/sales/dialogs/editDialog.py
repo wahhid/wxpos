@@ -16,6 +16,12 @@ class EditDialog(wx.Dialog):
         self.amountSpin = wx.SpinCtrl(self, -1, style=wx.SP_ARROW_KEYS, min=1)
         self.amountSpin.SetValidator(EditValidator(self, 'amount'))
 
+        self.productLbl = wx.StaticText(self, -1, label='Product')
+        self.productTxt = wx.TextCtrl(self, -1, style=wx.TE_READONLY)
+
+        self.maxLbl = wx.StaticText(self, -1, label='Maximum Amount')
+        self.maxTxt = wx.TextCtrl(self, -1, style=wx.TE_READONLY)
+
         self.okBtn = wx.Button(self, wx.ID_OK, label='OK')
         self.cancelBtn = wx.Button(self, wx.ID_CANCEL, label='Cancel')
     
@@ -24,7 +30,9 @@ class EditDialog(wx.Dialog):
         
         fields = [(self.descriptionLbl, self.descriptionTxt),
                   (self.sellPriceLbl, self.sellPriceTxt),
-                  (self.amountLbl, self.amountSpin)]
+                  (self.amountLbl, self.amountSpin),
+                  (self.productLbl, self.productTxt),
+                  (self.maxLbl, self.maxTxt)]
         for row, f in enumerate(fields):
             self.formSizer.Add(f[0], (row, 0), flag=wx.EXPAND | wx.ALL)
             self.formSizer.Add(f[1], (row, 1))
@@ -51,6 +59,17 @@ class EditDialog(wx.Dialog):
         self.__init_ctrls()
         self.__init_sizers()
 
+        p = data['product']
+        if p is None:
+            self.productTxt.SetValue('[None]')
+            self.maxTxt.SetValue('[None]')
+        else:
+            self.productTxt.SetValue(p.data['name'])
+            if p.data['in_stock']:
+                self.maxTxt.SetValue(str(p.data['quantity']))
+            else:
+                self.maxTxt.SetValue('[None]')
+
 class EditValidator(wx.PyValidator):
     def __init__(self, dialog, key):
         wx.PyValidator.__init__(self)
@@ -61,6 +80,11 @@ class EditValidator(wx.PyValidator):
 
     def Validate(self, parent):
         win = self.GetWindow()
+        if self.key == 'amount':
+            data = win.GetValue()
+            p = self.dialog.data['product']
+            if p is not None and p.data['in_stock'] and p.data['quantity']<data:
+                wx.MessageBox('Amount exceeds the product quantity in stock!', 'Warning', wx.OK | wx.ICON_WARNING)
         return True
 
     def TransferToWindow(self):

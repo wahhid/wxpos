@@ -16,9 +16,9 @@ class Object:
                         item = old_items_dict[_id]
                         item.getData()
                     else:
-                        self.all_items.append(self.item(_id))
+                        self.all_items.append(self.item(_id, self))
             else:
-                self.all_items = map(lambda _id: self.item(_id), item_ids)
+                self.all_items = map(lambda _id: self.item(_id, self), item_ids)
         return self.all_items
 
     def find(self, list=False, _id=None, **kwargs):
@@ -43,11 +43,11 @@ class Object:
     def add(self, **kwargs):
         args_items = filter(lambda (k, v): k in self.item.data_keys, kwargs.items())
         args = dict(args_items)
-        data_items = map(lambda (k, v): (k, self.getDBData(k, v)), args_items)
+        data_items = map(lambda (k, v): self.getDBData(k, v), args_items)
         data = dict(data_items)
         _id = self.dbInsert(**data)
         if _id:
-            i = self.item(_id)
+            i = self.item(_id, self)
             i.data.update(args)
             self.getAll(refresh=True)
             return i
@@ -58,16 +58,16 @@ class Object:
         return val
 
 class DataDict(dict):
-    def __init__(self, obj):
+    def __init__(self, item):
         dict.__init__(self)
-        self.obj = obj
-        self.keys = obj.data_keys
+        self.item = item
+        self.keys = item.data_keys
     
     def __missing__(self, key):
         if key not in self.keys:
             raise KeyError, 'No data key %s' % (key,)
         else:
-            self.obj.getData()
+            self.item.getData()
             if not self.has_key(key):
                 raise KeyError, 'No data key %s' % (key,)
             else:
@@ -75,7 +75,7 @@ class DataDict(dict):
 
     def copy(self):
         if len(self) == 0:
-            self.obj.getData()
+            self.item.getData()
         return dict.copy(self)
 
 class Item:
@@ -84,8 +84,9 @@ class Item:
     def getData(self):
         pass
 
-    def __init__(self, _id):
+    def __init__(self, _id, obj):
         self.id = _id
+        self.obj = obj
         self.data = DataDict(self)
 
     def __eq__(self, el):
@@ -103,7 +104,7 @@ class Item:
     def update(self, **kwargs):
         args_items = filter(lambda (k, v): k in self.data_keys, kwargs.items())
         args = dict(args_items)
-        data_items = map(lambda (k, v): (k, self.obj.getDBData(k, v)), args_items)
+        data_items = map(lambda (k, v): self.obj.getDBData(k, v), args_items)
         data = dict(data_items)
         success = self.obj.dbUpdate(self.id, **data)
         if success:

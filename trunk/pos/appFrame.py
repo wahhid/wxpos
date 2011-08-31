@@ -1,7 +1,6 @@
 import wx
 
 import pos.app
-import pos.db
 
 import pos.menu
 from pos.modules.base.objects.idManager import ids
@@ -9,10 +8,7 @@ from pos.modules.base.objects.idManager import ids
 import pos.modules.user.objects.user as user
 import pos.modules.user.objects.permission as permission
 
-def create(parent):
-    return Frame2(parent)
-
-class Frame2(wx.Frame):
+class AppFrame(wx.Frame):
     def _init_sizers(self):
         self.mainSizer = wx.BoxSizer(orient=wx.VERTICAL)
         self.mainSizer.AddWindow(self.mainToolbook, 1, border=0, flag=wx.EXPAND | wx.ALL)
@@ -24,6 +20,13 @@ class Frame2(wx.Frame):
     def __init__(self, parent):
         wx.Frame.__init__(self, parent, ids['mainFrame'],
                 size=wx.Size(800, 600), title='App Frame')
+
+        accTable = wx.AcceleratorTable([
+            (wx.ACCEL_CTRL, wx.WXK_TAB, ids['CtrlTab']),
+            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, wx.WXK_TAB, ids['CtrlShiftTab'])])
+        self.Bind(wx.EVT_MENU, self.OnCtrlTabCommand, id=ids['CtrlTab'])
+        self.Bind(wx.EVT_MENU, self.OnCtrlShiftTabCommand, id=ids['CtrlShiftTab']) 
+        self.SetAcceleratorTable(accTable)
         
         self._init_main()
         self._init_sizers()
@@ -32,21 +35,24 @@ class Frame2(wx.Frame):
 
         self.updateMenu()
 
+    def OnCtrlTabCommand(self, event):
+        event.Skip()
+        sel = self.mainToolbook.GetSelection()
+        pages = self.mainToolbook.GetPageCount()
+        self.mainToolbook.ChangeSelection((sel+1)%pages)
+
+    def OnCtrlShiftTabCommand(self, event):
+        event.Skip()
+        sel = self.mainToolbook.GetSelection()
+        pages = self.mainToolbook.GetPageCount()
+        self.mainToolbook.ChangeSelection((sel-1)%pages)
+
     def OnClose(self, event):
-        #for i in range(self.mainToolbook.GetPageCount()):
-        #    page = self.mainToolbook.GetPage(i)
-        #    if issubclass(wx.Toolbook, page.__class__):
-        #        page.DeleteAllPages()
-        #self.mainToolbook.DeleteAllPages()
-        #from sys import exit
-        #exit()
         pos.app.app.Exit()
         #event.Skip()
     
     def updateMenu(self):
-        # does not work if you re-call it
         self.mainToolbook.AssignImageList(pos.menu.il)
-        #self.mainToolbook.DeleteAllPages()
         for item in pos.menu.getItems():
             current_role = user.current.data['role']
             p = None if item.perm is None else permission.find(name=item.perm)

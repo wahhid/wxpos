@@ -1,6 +1,8 @@
 import wx
 from pos.menu import ModuleMenuBase, MenuRoot, MenuItem
 
+dependencies = tuple()
+
 class ModuleMenu(ModuleMenuBase):
     def __init__(self, menu):
         self.menu = menu
@@ -10,5 +12,3 @@ class ModuleMenu(ModuleMenuBase):
 
     def loadSubItems(self):
         MenuItem(self.menu, "System", "Configuration", wx.Panel, 'system')
-
-dependencies = tuple()

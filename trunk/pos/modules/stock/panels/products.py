@@ -22,6 +22,7 @@ class ProductsPanel(wx.Panel, ManagePanel):
         self.createField('Currency', wx.Choice, 'currency', currency.default)
         self.createField('Quantity', wx.SpinCtrl, 'quantity', 0,
                          value='0', style=wx.SP_ARROW_KEYS, min=0)
+        self.createField('In Stock', wx.CheckBox, 'in_stock', True)
         self.createField('Category', wx.Choice, 'category', None)
         self._init_fields()
 
@@ -36,8 +37,11 @@ class ProductsPanel(wx.Panel, ManagePanel):
         category_choices = map(lambda c: c.data['name'], category.find(list=True))
         choices = ['[None]']+category_choices
         self.getField('category').SetItems(choices)
+        
         currency_choices = map(lambda c: c.data['symbol'], currency.find(list=True))
         self.getField('currency').SetItems(currency_choices)
+
+        self.getField('quantity').Enable(False)
         p = self.getCurrentItem()
         if p is None: return
         self.data = p.data.copy()
@@ -67,6 +71,8 @@ class DataValidator(wx.PyValidator):
                     win.SetValue(0)
                 else:
                     win.SetValue(data)
+            elif self.key == 'in_stock':
+                win.SetValue(data)
             elif self.key == 'currency':
                 win.SetStringSelection(data.data['symbol'])
             elif self.key == 'category':
@@ -83,7 +89,7 @@ class DataValidator(wx.PyValidator):
     def TransferFromWindow(self):
         try:
             win = self.GetWindow()
-            if self.key in ('name', 'description', 'reference', 'code', 'price', 'quantity'):
+            if self.key in ('name', 'description', 'reference', 'code', 'price', 'quantity', 'in_stock'):
                 data = win.GetValue()
             elif self.key == 'currency':
                 currency_symbol = win.GetStringSelection()

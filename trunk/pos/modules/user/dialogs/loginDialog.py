@@ -4,20 +4,17 @@ from pos.modules.base.objects.idManager import ids
 
 import pos.modules.user.objects.user as user
 
-def create(parent):
-    return Dialog1(parent)
-
-class Dialog1(wx.Dialog):
+class LoginDialog(wx.Dialog):
     def __init_ctrls(self):
         self.panel = wx.Panel(self, ids['loginPanel'])
 
         # User
-        self.userLbl = wx.StaticText(self.panel, ids['userLbl'], label='User')
-        self.userList = wx.ListCtrl(self.panel, ids['userList'], style=wx.LC_ICON)
+        self.userLbl = wx.StaticText(self.panel, -1, label='User')
+        self.userList = wx.ListCtrl(self.panel, -1, style=wx.LC_ICON)
         
         # Password
-        self.passwordLbl = wx.StaticText(self.panel, ids['passwordLbl'], label='Password')
-        self.passwordTxt = wx.TextCtrl(self.panel, ids['passwordTxt'], style=wx.TE_PASSWORD)
+        self.passwordLbl = wx.StaticText(self.panel, -1, label='Password')
+        self.passwordTxt = wx.TextCtrl(self.panel, -1, style=wx.TE_PASSWORD)
 
         # Controls
         self.loginBtn = wx.Button(self, wx.ID_OK, label='Login')

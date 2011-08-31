@@ -1,48 +1,75 @@
-import pos.db
-db = pos.db.db
+import pos
 
 import pos.modules.base.objects.common as common
 
 class Currency(common.Item):
     data_keys = ('name', 'symbol', 'value')
     
-    def __init__(self, _id):
-        common.Item.__init__(self, _id)
-        self.obj = obj
-    
     def getData(self):
-        self.data['name'], self.data['symbol'], self.data['value'] = \
-                           db.getCurrencyInfo(self.id)
+        sql = "SELECT name, symbol, value FROM currencies WHERE id=%s"
+        params = (self.id,)
+        cursor, success = pos.db.query(sql, params)
+        if success:
+            results = cursor.fetchone()
+            if len(results)>0:
+                self.data['name'], self.data['symbol'], \
+                        self.data['value'] = results
 
 class CurrencyObject(common.Object):
     item = Currency
-    dbGetAll = lambda self: db.getAllCurrencies()
-    def dbInsert(self, **kwargs):
-        ret = db.insertCurrency(name=kwargs['name'],
-                                symbol=kwargs['symbol'],
-                                value=kwargs['value'])
-        return ret
+    
+    def dbGetAll(self):
+        sql = "SELECT id FROM currencies"
+        params = None
+        cursor, success = pos.db.query(sql, params)
+        if success:
+            results = cursor.fetchall()
+            return map(lambda r: r[0], results)
+        else:
+            return None
+    
+    def dbInsert(self, name, symbol, value):
+        sql = "INSERT INTO currencies (name, symbol, value) VALUES (%s, %s, %s)"
+        params = (name, symbol, value)
+        cursor, success = pos.db.query(sql, params)
+        if success:
+            _id = pos.db.conn.insert_id()
+            return _id
+        else:
+            return None
     
     def dbUpdate(self, _id, **kwargs):
-        ret = db.updateCurrency(_id, name=kwargs['name'],
-                                symbol=kwargs['symbol'],
-                                value=kwargs['value'])
-        return ret
+        fields = ('name', 'symbol', 'value')
+        update_str = ",".join([f+"=%s" for f in fields if kwargs.has_key(f)])
+        update_params = [kwargs[f] for f in fields if kwargs.has_key(f)]
+        
+        if len(update_str) == 0: return True
+        sql = "UPDATE currencies SET "+update_str+" WHERE id=%s"
+        params = update_params+[_id]
+        cursor, success = pos.db.query(sql, params)
+        if success:
+            return True
+        else:
+            return None
     
     def dbDelete(self, _id):
-        ret = db.deleteCurrency(_id)
-        return ret
+        sql = "DELETE FROM currencies WHERE id=%s"
+        params = (_id,)
+        cursor, success = pos.db.query(sql, params)
+        if success:
+            return (cursor.rowcount == 1)
+        else:
+            return None
 
     def getDBData(self, key, val):
         if key == 'value':
-            return float(val)
+            return key, float(val)
         else:
-            return val
+            return key, val
 
 obj = CurrencyObject()
 
 find = lambda _id=None, list=False, **kwargs: obj.find(list, _id, **kwargs)
-getAll = lambda refresh=False: obj.getAll()
 add = lambda **kwargs: obj.add(**kwargs)
 
 default = find(_id=1)
