@@ -13,9 +13,9 @@ import pos.modules.sales.objects.ticketline as ticketline
 from ..dialogs.editDialog import EditDialog
 from ..dialogs.payDialog import PayDialog
 
-from .main.ticketChoice import TicketChoice
-from .main.ticketList import TicketList
-from .main.catalogBook import CatalogBook
+from ..windows.ticketChoice import TicketChoice
+from ..windows.ticketList import TicketList
+from ..windows.catalogBook import CatalogBook
 
 from pos.modules.base.objects.idManager import ids
 
