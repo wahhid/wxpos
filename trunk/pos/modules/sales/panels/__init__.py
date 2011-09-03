@@ -179,6 +179,7 @@ class SalesPanel(wx.Panel):
     def enableTicketActions(self, enable):
         self.closeBtn.Enable(enable)
         self.cancelBtn.Enable(enable)
+        self.newTicketlineBtn.Enable(enable)
 
     def enableTicketlineActions(self, enable):
         self.plusBtn.Enable(enable)
