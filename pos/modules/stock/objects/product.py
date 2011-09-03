@@ -75,7 +75,7 @@ class ProductObject(common.Object):
             return None
 
     def dbUpdate(self, _id, **kwargs):
-        if kwargs.has_key('in_stock') and kwargs['in_stock']:
+        if kwargs.has_key('in_stock') and not kwargs['in_stock']:
             kwargs['quantity'] = None
         fields = ('name', 'description', 'reference', 'code', 'price', 'currency_id', 'quantity', 'category_id')
         update_str = ",".join([f+"=%s" for f in fields if kwargs.has_key(f)])

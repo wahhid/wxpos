@@ -89,7 +89,9 @@ class DataValidator(wx.PyValidator):
     def TransferFromWindow(self):
         try:
             win = self.GetWindow()
-            if self.key in ('name', 'description', 'reference', 'code', 'price', 'quantity', 'in_stock'):
+            if self.key in ('name', 'description', 'reference', 'code', 'price', 'quantity'):
+                data = win.GetValue()
+            elif self.key == 'in_stock':
                 data = win.GetValue()
             elif self.key == 'currency':
                 currency_symbol = win.GetStringSelection()

@@ -4,7 +4,7 @@ import pos.modules.sales.objects.ticketline as ticketline
 
 from pos.modules.base.objects.idManager import ids
 
-from ..panels.main.ticketList import TicketList
+from ..windows.ticketList import TicketList
 
 class PayDialog(wx.Dialog):
     def __init_ctrls(self):
@@ -51,6 +51,8 @@ class PayDialog(wx.Dialog):
         self.controlSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
         self.controlSizer.Add(wx.Size(0, 0), 1, flag=wx.EXPAND | wx.ALL)
         self.controlSizer.Add(self.okBtn, 0, flag=wx.CENTER | wx.ALL)
+        self.controlSizer.Add(wx.Size(0, 0), 1, flag=wx.EXPAND | wx.ALL)
+        self.controlSizer.Add(self.printBtn, 0, flag=wx.CENTER | wx.ALL)
         self.controlSizer.Add(wx.Size(0, 0), 1, flag=wx.EXPAND | wx.ALL)
         self.controlSizer.Add(self.cancelBtn, 0, flag=wx.CENTER | wx.ALL)
         self.controlSizer.Add(wx.Size(0, 0), 1, flag=wx.EXPAND | wx.ALL) 
