@@ -1,6 +1,10 @@
 print '-- APP INIT --'
 
+import sys
+print '*Python', sys.version, 'on', sys.platform
+
 import wx
+print '*Running on wxPython', wx.version()
 
 import pos
 

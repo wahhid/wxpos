@@ -17,8 +17,7 @@ class CategoriesPanel(wx.Panel, ManagePanel):
         self.createField('Parent Category', wx.Choice, 'parent_category', None)
         self._init_fields()
 
-    getItems = lambda self: [{'text': c.data['name']} for c in category.find(list=True)]
-    getItem = lambda self, item: category.find(name=item.GetText())
+    getItems = lambda self: [[c, c.data['name']] for c in category.find(list=True)]
     newItem = lambda self: category.add(**self.data)
     updateItem = lambda self, c: c.update(**self.data)
     canEditItem = lambda self, c: True

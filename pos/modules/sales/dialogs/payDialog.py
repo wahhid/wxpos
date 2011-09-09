@@ -1,5 +1,7 @@
 import wx
 
+import pos.modules.currency.objects.currency as currency
+
 import pos.modules.sales.objects.ticketline as ticketline
 
 from pos.modules.base.objects.idManager import ids
@@ -73,9 +75,11 @@ class PayDialog(wx.Dialog):
         self.total = self.getTicketTotal()
         self.given = self.total
         self.change = 0
+
+        tc = self.ticket.data['currency']
         self.givenTxt.SetValue(str(self.given))
-        self.totalTxt.SetValue(str(self.total))
-        self.changeTxt.SetValue(str(self.change))
+        self.totalTxt.SetValue(tc.format(self.total))
+        self.changeTxt.SetValue(tc.format(self.change))
         
         self.ticketList.updateList(self.ticket)
     
@@ -89,19 +93,26 @@ class PayDialog(wx.Dialog):
 
     def OnGivenText(self, event):
         event.Skip()
-        self.given = float(self.givenTxt.GetValue())
+        try:
+            self.given = float(self.givenTxt.GetValue())
+        except:
+            self.given = 0
         self.change = self.given-self.total
-        self.changeTxt.SetValue(str(self.change))
+        
+        tc = self.ticket.data['currency']
+        self.changeTxt.SetValue(tc.format(self.change))
 
     def OnPrintButton(self, event):
         wx.MessageBox('Not implemented yet.', 'Print ticket', style=wx.OK)
         event.Skip()
 
     def OnOkButton(self, event):
+        tc = self.ticket.data['currency']
         if self.given < self.total:
-            wx.MessageBox('Not enough. %d remaining.' % (-self.change,), 'Pay Ticket', style=wx.OK)
+            wx.MessageBox('Not enough. %s remaining.' % (tc.format(-self.change),), 'Pay Ticket', style=wx.OK)
         elif self.given > self.total:
-            wx.MessageBox('Return change: %d.' % (self.change,), 'Pay Ticket', style=wx.OK)
-            event.Skip()
+            retCode = wx.MessageBox('Return change: %s.' % (tc.format(self.change),), 'Pay Ticket', style=wx.OK | wx.CANCEL)
+            if retCode == wx.OK:
+                event.Skip()
         else:
             event.Skip()

@@ -26,8 +26,7 @@ class ProductsPanel(wx.Panel, ManagePanel):
         self.createField('Category', wx.Choice, 'category', None)
         self._init_fields()
 
-    getItems = lambda self: [{'text': p.data['name']} for p in product.find(list=True)]
-    getItem = lambda self, item: product.find(name=item.GetText())
+    getItems = lambda self: [[p, p.data['name']] for p in product.find(list=True)]
     newItem = lambda self: product.add(**self.data)
     updateItem = lambda self, p: p.update(**self.data)
     canEditItem = lambda self, p: True

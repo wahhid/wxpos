@@ -19,8 +19,7 @@ class PermissionsPanel(wx.Panel, ManagePanel):
                          style=wx.TE_MULTILINE)
         self._init_fields()
 
-    getItems = lambda self: [{'text': p.data['name']} for p in permission.find(list=True)]
-    getItem = lambda self, item: permission.find(name=item.GetText())
+    getItems = lambda self: [[p, p.data['name']] for p in permission.find(list=True)]
     newItem = lambda self: permission.add(**self.data)
     updateItem = lambda self, p: p.update(**self.data)
     canEditItem = lambda self, p: True

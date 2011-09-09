@@ -45,7 +45,7 @@ def framePage(canvas,doc):
     #canvas.drawString(4 * inch, 0.75 * inch, "Page %d" % doc.page)
     canvas.restoreState()
 
-def generateReport(filename, _from, _to):
+def generateReport(filename, c, _from, _to):
     doc = SimpleDocTemplate(filename)
     elements = []
 
@@ -59,13 +59,14 @@ def generateReport(filename, _from, _to):
                             fontSize=14),
                    alias='subtitle')
 
-    elements.append(Paragraph('Sales Report', stylesheet['Title']))
+    elements.append(Paragraph('Customer Report', stylesheet['Title']))
+    elements.append(Paragraph(c.data['name'], stylesheet['Subtitle']))
     if _to is not None:
         elements.append(Paragraph('From %s To %s' % (_from, _to), stylesheet['Subtitle']))
     else:
         elements.append(Paragraph('On: %s' % (_from,), stylesheet['Subtitle']))
 
-    ts = getTickets(_from, _to)
+    ts = filter(lambda t: t.data["customer"] == c, getTickets(_from, _to))
     
     period_total = 0
     defc = currency.default
@@ -115,7 +116,7 @@ def generateReport(filename, _from, _to):
 
     elements.append(Spacer(36,36))
 
-    total_para = Paragraph('Sales Total: %s' % (defc.format(period_total),),
+    total_para = Paragraph('Total Due: %s' % (defc.format(period_total),),
                            stylesheet['Heading3Right'])
     elements.append(total_para)
 

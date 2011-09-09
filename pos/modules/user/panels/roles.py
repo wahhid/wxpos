@@ -18,8 +18,7 @@ class RolesPanel(wx.Panel, ManagePanel):
         self.createField('Permissions', wx.CheckListBox, 'permissions', [])
         self._init_fields()
 
-    getItems = lambda self: [{'text': r.data['name']} for r in role.find(list=True)]
-    getItem = lambda self, item: role.find(name=item.GetText())
+    getItems = lambda self: [[r, r.data['name']] for r in role.find(list=True)]
     newItem = lambda self: role.add(**self.data)
     updateItem = lambda self, r: r.update(**self.data)
     canEditItem = lambda self, r: user.current.data['role'] != r
