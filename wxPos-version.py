@@ -1,6 +1,6 @@
 import traceback, sys, os
 
-ver = sys.argv[0] if len(sys.argv) > 1 else '2.9'
+ver = sys.argv[1] if len(sys.argv) > 1 else '2.9'
 import wxversion
 wxversion.select(ver)
 print 'Changing wx version to', ver
