@@ -3,26 +3,19 @@
 = Introduction =
 
 wxpos is designed to be database independent. Currently it is working with MySQL.
-In the pos/db directory, there are currently 4 files:
+In the pos/database directory, there are currently 4 files:
   * base: defines the BaseDB class, which defines the base methods of the DB object: connect, close, error.
   * mysql: defines MysqlDB which inherits from BaseDB and defines the methods for connection, query execution, error handling...
   * __init__: defines the DB class, the actual class that will be used. It inherits from MysqlDB in this case.
-  * subset: The class defined here is the base class of the modules' db part. It is kind of a way of "subclassing" the main DB class.
 
 = Configuring MySQL =
 
 In pos/db/__init__.py, in the definition of the DB class, the host/username/password/db_name are defined in the __init__ method.
 Change those values to suit your needs.
 
+Run wxPos-config.py to configure the database tables, currently on MySQL only...
+
 = Note =
 
-NOTE: The db module is still not stable, so the subset might be useless, and maybe this is not the way of doing it.
-
-Plus, you will notice some default values will be inserted in the database upon configuring your database. This is just for testing, but this is a problem because it is hard-coded in the configuration itself. There should be a way of allowing the user to choose whether or not to add these. That is not a priority.
-
-The whole db thing is not a priority now, as long as it is working, and the project is not finished.
-
-One major problem is this:
-  * when updating an item, if the data is None, it does not update it (see product->category) coz in db.update functions default is None, and if it is default nothing happens.
-  * if you save without changing anything, it says there is an error because the update methods return true only if affected_rows == 1 ...
-So, the database problem should be solved very shortly, asap.
+The database module is still not stable, and i think it would not work on any other database system than MySQL.
+I should make sure, and then make the small changes for it to "maybe" work.
