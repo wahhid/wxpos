@@ -2,21 +2,27 @@ import pos
 
 import pos.modules.base.objects.common as common
 
+import pos.modules.currency.objects.currency as currency
+
 import pos.modules.user.objects.user as user
 
 import pos.modules.customer.objects.customer as customer
 
 class Ticket(common.Item):
-    data_keys = ('user', 'closed', 'customer')
+    data_keys = ('user', 'closed', 'currency', 'customer')
     
     def getData(self):
-        sql = "SELECT comment, user_id, customer_id FROM tickets WHERE id=%s"
+        sql = "SELECT comment, currency_id, user_id, customer_id, date_close FROM tickets WHERE id=%s"
         params = (self.id,)
         cursor, success = pos.db.query(sql, params)
         if success:
             results = cursor.fetchone()
             if len(results)>0:
-                self.data['comment'], user_id, customer_id = results
+                self.data['comment'], currency_id, user_id, customer_id, self.data['date_close'] = results
+                if currency_id is None:
+                    self.data['currency'] = None
+                else:
+                    self.data['currency'] = currency.find(_id=currency_id)
                 self.data['user'] = user.find(_id=user_id)
                 if customer_id is None:
                     self.data['customer'] = None
@@ -59,9 +65,9 @@ class TicketObject(common.Object):
         else:
             return None
     
-    def dbInsert(self, user_id):
-        sql = "INSERT INTO tickets (date_open, user_id) VALUES (NOW(), %s)"
-        params = (user_id,)
+    def dbInsert(self, currency_id, user_id):
+        sql = "INSERT INTO tickets (date_open, currency_id, user_id) VALUES (NOW(), %s, %s)"
+        params = (currency_id, user_id,)
         cursor, success = pos.db.query(sql, params)
         if success:
             _id = pos.db.conn.insert_id()
@@ -95,6 +101,10 @@ class TicketObject(common.Object):
     def getDBData(self, key, val):
         if key == 'user':
             return 'user_id', val.id
+        elif key == 'customer':
+            return 'customer_id', val.id
+        elif key == 'currency':
+            return 'currency_id', val.id
         else:
             return key, val
 

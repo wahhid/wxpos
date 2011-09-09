@@ -17,8 +17,7 @@ class CustomergroupsPanel(wx.Panel, ManagePanel):
                          style=wx.TE_MULTILINE)
         self._init_fields()
 
-    getItems = lambda self: [{'text': p.data['name']} for p in customergroup.find(list=True)]
-    getItem = lambda self, item: customergroup.find(name=item.GetText())
+    getItems = lambda self: [[cg, cg.data['name']] for cg in customergroup.find(list=True)]
     newItem = lambda self: customergroup.add(**self.data)
     updateItem = lambda self, cg: cg.update(**self.data)
     canEditItem = lambda self, cg: True

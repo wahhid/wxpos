@@ -15,10 +15,11 @@ class CurrenciesPanel(wx.Panel, ManagePanel):
         self.createField('Name', wx.TextCtrl, 'name', '')
         self.createField('Symbol', wx.TextCtrl, 'symbol', '')
         self.createField('Value', wx.TextCtrl, 'value', '')
+        self.createField('Decimal Places', wx.SpinCtrl, 'decimal_places', 0)
+        self.createField('Digit Grouping', wx.CheckBox, 'digit_grouping', True)
         self._init_fields()
 
-    getItems = lambda self: [{'text': c.data['name']} for c in currency.find(list=True)]
-    getItem = lambda self, item: currency.find(name=item.GetText())
+    getItems = lambda self: [[c, c.data['name']] for c in currency.find(list=True)]
     newItem = lambda self: currency.add(**self.data)
     updateItem = lambda self, c: c.update(**self.data)
     canEditItem = lambda self, c: True
@@ -41,9 +42,13 @@ class DataValidator(wx.PyValidator):
         try:
             win = self.GetWindow()
             data = self.getData(win)
-            if len(data) == 0:
-                return False
-            if self.key == 'value':
+            if self.key in ('name', 'symbol'):
+                return len(data)>0
+            elif self.key == 'decimal_places':
+                return True
+            elif self.key == 'digit_grouping':
+                return True
+            elif self.key == 'value':
                 try:
                     float(data)
                 except:
@@ -58,7 +63,7 @@ class DataValidator(wx.PyValidator):
         try:
             win = self.GetWindow()
             data = self.panel.data[self.key]
-            if self.key in ('name', 'symbol'):
+            if self.key in ('name', 'symbol', 'decimal_places', 'digit_grouping'):
                 win.SetValue(data)
             elif self.key == 'value':
                 win.SetValue(str(data))
@@ -81,7 +86,7 @@ class DataValidator(wx.PyValidator):
         
     def getData(self, win):
         data = None
-        if self.key in ('name', 'symbol', 'value'):
+        if self.key in ('name', 'symbol', 'value', 'decimal_places', 'digit_grouping'):
             data = win.GetValue()
         return data
                 

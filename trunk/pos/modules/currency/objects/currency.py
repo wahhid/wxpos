@@ -3,17 +3,26 @@ import pos
 import pos.modules.base.objects.common as common
 
 class Currency(common.Item):
-    data_keys = ('name', 'symbol', 'value')
+    data_keys = ('name', 'symbol', 'value',
+                 'decimal_places', 'digit_grouping', 'format')
     
     def getData(self):
-        sql = "SELECT name, symbol, value FROM currencies WHERE id=%s"
+        sql = "SELECT name, symbol, value, decimal_places, digit_grouping FROM currencies WHERE id=%s"
         params = (self.id,)
         cursor, success = pos.db.query(sql, params)
         if success:
             results = cursor.fetchone()
             if len(results)>0:
                 self.data['name'], self.data['symbol'], \
-                        self.data['value'] = results
+                        self.data['value'], self.data['decimal_places'], \
+                        self.data['digit_grouping'] = results
+
+    def getFormatString(self):
+        return (',' if self.data['digit_grouping'] else '')+\
+               ('.%df' % (self.data['decimal_places'],) if self.data['decimal_places']>0 else '.0f')
+
+    def format(self, value):
+        return '%s %s' % (format(value, self.getFormatString()), self.data['symbol'])
 
 class CurrencyObject(common.Object):
     item = Currency
@@ -28,9 +37,9 @@ class CurrencyObject(common.Object):
         else:
             return None
     
-    def dbInsert(self, name, symbol, value):
-        sql = "INSERT INTO currencies (name, symbol, value) VALUES (%s, %s, %s)"
-        params = (name, symbol, value)
+    def dbInsert(self, name, symbol, value, decimal_places, digit_grouping):
+        sql = "INSERT INTO currencies (name, symbol, value, decimal_places, digit_grouping) VALUES (%s, %s, %s, %s, %s)"
+        params = (name, symbol, value, decimal_places, digit_grouping)
         cursor, success = pos.db.query(sql, params)
         if success:
             _id = pos.db.conn.insert_id()
@@ -39,7 +48,7 @@ class CurrencyObject(common.Object):
             return None
     
     def dbUpdate(self, _id, **kwargs):
-        fields = ('name', 'symbol', 'value')
+        fields = ('name', 'symbol', 'value', 'decimal_places', 'digit_grouping')
         update_str = ",".join([f+"=%s" for f in fields if kwargs.has_key(f)])
         update_params = [kwargs[f] for f in fields if kwargs.has_key(f)]
         
@@ -79,4 +88,4 @@ def convert(price, src_currency, dest_currency):
     d_val = float(dest_currency.data['value'])
     #ps*vs = pd*vd
 
-    return float(price)*s_val/d_val
+    return round(float(price)*s_val/d_val, dest_currency.data['decimal_places'])

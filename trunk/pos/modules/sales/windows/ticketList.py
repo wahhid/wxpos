@@ -37,7 +37,7 @@ class TicketList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, ListRowHighlighter
     # Product to Line manipulation
     def addProductLine(self, p):
         sell_price = currency.convert(p.data['price'],
-                                      p.data['currency'], currency.default)
+                                      p.data['currency'], self.ticket.data['currency'])
         tl = ticketline.add(description=p.data['name'],
                             sell_price=sell_price,
                             amount=1,
@@ -105,11 +105,11 @@ class TicketList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, ListRowHighlighter
         description = tl.data['description']
         sell_price = tl.data['sell_price']
         amount = tl.data['amount']
-        currency_symbol = currency.default.data['symbol']
+        c = self.ticket.data['currency']
         items = [description,
-                 '%d %s' % (sell_price, currency_symbol),
+                 c.format(sell_price),
                  'x%d' % (amount,),
-                 '%d %s' % (amount*sell_price, currency_symbol)]
+                 c.format(amount*sell_price)]
         return items
 
     def updateList(self, t, select=False):

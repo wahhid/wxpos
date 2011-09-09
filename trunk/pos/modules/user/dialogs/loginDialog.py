@@ -3,6 +3,7 @@ import wx
 from pos.modules.base.objects.idManager import ids
 
 import pos.modules.user.objects.user as user
+from pos.modules.user.windows.userCatalogList import UserCatalogList
 
 class LoginDialog(wx.Dialog):
     def __init_ctrls(self):
@@ -10,7 +11,7 @@ class LoginDialog(wx.Dialog):
 
         # User
         self.userLbl = wx.StaticText(self.panel, -1, label='User')
-        self.userList = wx.ListCtrl(self.panel, -1, style=wx.LC_ICON)
+        self.userList = UserCatalogList(self.panel)
         
         # Password
         self.passwordLbl = wx.StaticText(self.panel, -1, label='Password')
@@ -54,13 +55,6 @@ class LoginDialog(wx.Dialog):
         self.__init_sizers()
 
         self.panel.SetValidator(LoginValidator())
-        
-        users = user.find(list=True)
-        il = wx.ImageList(32, 32, True)
-        il.Add(wx.Bitmap('images/user.png', wx.BITMAP_TYPE_PNG))
-        self.userList.AssignImageList(il, 0)
-        for index, u in enumerate(users):
-            self.userList.InsertImageStringItem(index, u.data['username'], 0)
 
 class LoginValidator(wx.PyValidator):
     def __init__(self):
@@ -71,10 +65,11 @@ class LoginValidator(wx.PyValidator):
 
     def Validate(self, parent):
         password = parent.passwordTxt.GetValue()
-        selected_user = parent.userList.GetFirstSelected()
+        selected = parent.userList.GetFirstSelected()
+        u, image_id = parent.userList.getItem(selected)
         
         password_valid = True
-        username_valid = selected_user >= 0
+        username_valid = u is not None
         
         if not username_valid:
             wx.MessageBox(message='Select a user', caption='Failure',
@@ -85,8 +80,6 @@ class LoginValidator(wx.PyValidator):
                                 style=wx.OK, parent=None)
             return False
         else:
-            username = parent.userList.GetItemText(selected_user)
-            u = user.find(username=username)
             if not u.login(password):
                 wx.MessageBox(message='Wrong username/password', caption='Failure',
                                     style=wx.OK, parent=None)

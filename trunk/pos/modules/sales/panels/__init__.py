@@ -2,6 +2,8 @@ import wx
 
 import pos.modules.user.objects.user as user
 
+import pos.modules.currency.objects.currency as currency
+
 import pos.modules.customer.objects.customer as customer
 
 import pos.modules.stock.objects.category as category
@@ -202,7 +204,7 @@ class SalesPanel(wx.Panel):
     
     def OnNewButton(self, event):
         event.Skip()
-        t = ticket.add(user=user.current)
+        t = ticket.add(user=user.current, currency=currency.default)
         self.ticketChoice.updateList()
         self.setCurrentTicket(t)
 

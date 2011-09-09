@@ -29,8 +29,7 @@ class UsersPanel(wx.Panel, ManagePanel):
         self.getField('passwordCheck').Bind(wx.EVT_CHECKBOX, self.OnPasswordCheckbox)
         self.getField('role').Bind(wx.EVT_CHOICE, self.OnRoleChoice)
 
-    getItems = lambda self: [{'text': u.data['username']} for u in user.find(list=True)]
-    getItem = lambda self, item: user.find(username=item.GetText())
+    getItems = lambda self: [[u, u.data['username']] for u in user.find(list=True)]
     newItem = lambda self: user.add(username=self.data['username'], password=self.data['password1'], role=self.data['role'])
     def updateItem(self, u):
         if self.data['passwordCheck']:

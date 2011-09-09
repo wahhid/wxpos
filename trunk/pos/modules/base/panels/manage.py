@@ -55,7 +55,7 @@ class ManagePanel:
     
     def _init_panel(self, label, validator):
         self.itemsLbl = wx.StaticText(self, -1, label=label)
-        self.itemList = wx.ListCtrl(self, -1, style=wx.LC_LIST)
+        self.itemList = wx.ListCtrl(self, -1, style=wx.LC_LIST | wx.LC_SORT_ASCENDING)
         self.itemList.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnListItemSelected)
         
         self.validator = validator
@@ -65,6 +65,7 @@ class ManagePanel:
         self.fields = {}
         self.field_order = []
         self.data = {}
+        self.items = {}
         
         self._init_controls()
 
@@ -120,20 +121,24 @@ class ManagePanel:
             self.getField(name).Enable(enable_form)
     
     def updateItemList(self):
+        self.items = {}
         items = self.getItems()
         self.itemList.ClearAll()
+        _index = 0
         for i in items:
             item = wx.ListItem()
-            item.SetText(i['text'])
-            self.itemList.InsertItem(item)
+            item.SetText(i[1])
+            item.SetData(_index)
+            index = self.itemList.InsertItem(item)
+            self.items[_index] = i[0]
+            _index += 1
 
     def getCurrentItem(self):
         index = self.itemList.GetFirstSelected()
         if index == -1:
             return None
         else:
-            item = self.itemList.GetItem(index)
-            return self.getItem(item)
+            return self.items[self.itemList.GetItemData(index)]
 
     def viewItem(self):
         self.setMode(VIEW_MODE)
@@ -227,9 +232,6 @@ class ManagePanel:
     #########################
     def getItems(self):
         return []
-
-    def getItem(self, item):
-        return None
 
     def canEditItem(self, item):
         return True
