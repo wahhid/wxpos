@@ -23,13 +23,14 @@ wxpos is designed to be easily migrated to any database system (although current
 
 There are three files in the "trunk" directory:
   * wxPos.py is the main application file. Opening this files will call the app.run() function of the application causing the application to run obviously. But that file will not redirect the output, meaning you'll see the output targeted for debugging in the black window.
-  * wxPos1.py is the same as wxPos.py but with one difference: the output is redirected to "out.log". That is more convenient to keep track of the debugged info.
+  * wxPos-no-console.py is the same as wxPos.py but with one difference: the output is redirected to "out.log". That is more convenient to keep track of the debugged info.
+  * wxPos-version.py is also the same as wxPos.py, except that it can run with a chosen version (passed as a command line argument) or else it will try to run with wx version 2.9
   * wxPos-config.py will run the pos.config.run() function which will configure the database for use with wxPos and its different modules. To read more about configuring database go to [Database].
 
 The pos directory is the main python module used for the wxpos software.
 The files in pos directory describe themselves by their names.
 The directories are as following:
   * pos/modules/ Discussed in [Modules]
-  * pos/db/ Discussed in [Database]
+  * pos/database/ Discussed in [Database]
   * pos/menu/ Contains the base classes for the menu, menu root items, and sub items. The functionality is there. The menu items are created from within the __init__.py file of the module itself. See the pos/modules/base/__init__.py of "base" module and pos/modules/user/__init__.py of "user" module for usage examples.
   * pos/images/ Contains two directories menu and commands: menu contains icons of the menu entries, and commands some icons for the common actions of the different modules. The images directory should be changed and especially the menu directory, because the images directory should not depend on any module. In the future, there would be an images directory in each module directory maybe...
