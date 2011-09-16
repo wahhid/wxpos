@@ -7,7 +7,6 @@ print 'Changing wx version to', ver
 
 import wx
 
-os.chdir('./pos')
 try:
     import pos.app
     pos.app.run()

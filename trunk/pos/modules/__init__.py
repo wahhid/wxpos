@@ -1,28 +1,36 @@
 import pos
 import imp, os, sys
+import pkgutil
 
 def loadModules():
     print '*Loading modules...'
     #import pos.modules
     #modules_path = pos.modules.__path__[0]
     modules_path = os.path.dirname(__file__)
+    packages = [p for p in pkgutil.walk_packages([modules_path])]
 
     modules = []
-    sys.path.insert(0, modules_path)
-    for name in os.listdir(modules_path):
-        full_path = os.path.join(modules_path, name)
-        if os.path.isdir(full_path):
-            if name.startswith('.'):
-                print '*Ignored module', name
-                continue
+    for pkg in packages:
+        if pkg[1].startswith('.'):
+            print '*Ignored module', pkg[1]
+            continue
+        if hasattr(sys, 'frozen') and sys.frozen:
             try:
-                _file, pathname, description = imp.find_module(name)
+                module = pkg[0].load_module(pkg[1])
             except ImportError:
                 print '*Invalid module', name
             else:
-                module = imp.load_package(name, pathname)
                 modules.append(module)
-    sys.path.remove(modules_path)
+        else:
+            sys.path.insert(0, modules_path)
+            try:
+                _file, pathname, description = imp.find_module(pkg[1])
+            except ImportError:
+                print '*Invalid module', pkg[1]
+            else:
+                module = imp.load_package(pkg[1], pathname)
+                modules.append(module)
+            sys.path.remove(modules_path)
     modules.sort(cmp=dependencyCmp)
     print '*(%d) modules found: %s' % (len(modules), ', '.join([m.__name__ for m in modules]))
     return modules

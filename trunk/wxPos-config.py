@@ -1,16 +1,11 @@
-import traceback, sys, os
+import traceback, sys
 
-os.chdir('./pos')
 try:
     import pos.dbConfig
     pos.dbConfig.run()
-except KeyboardInterrupt:
-    sys.exit()
 except Exception:
+    print '[ERROR]'
     traceback.print_exc()
-
-print '[DONE EXECUTION]'
-try:
-    while True: pass
-except KeyboardInterrupt:
-    sys.exit()
+    raw_input('Press enter to exit...')
+finally:
+    print '---- DONE EXECUTION ----'
