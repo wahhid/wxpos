@@ -113,7 +113,7 @@ class PDFReportPanel(wx.Panel):
 
         parameters.update({'from_date': from_date, 'to_date': to_date})
 
-        filename = '../reports/%s.pdf' % (self.getFilename(**parameters),)
+        filename = './reports/%s.pdf' % (self.getFilename(**parameters),)
         filename = os.path.abspath(filename)
 
         doc = self.generateReport(filename, **parameters)
