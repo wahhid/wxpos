@@ -1,6 +1,5 @@
-import traceback, sys, os
+import traceback, sys
 
-os.chdir('./pos')
 try:
     import pos.app
     pos.app.run()
