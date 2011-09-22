@@ -10,7 +10,7 @@ In the pos/database directory, there are currently 4 files:
 
 = Configuring MySQL =
 
-In pos/db/__init__.py, in the definition of the DB class, the host/username/password/db_name are defined in the __init__ method.
+In pos/database/__init__.py, in the definition of the DB class, the host/username/password/db_name are defined in the __init__ method.
 Change those values to suit your needs.
 
 Run wxPos-config.py to configure the database tables, currently on MySQL only...
@@ -19,3 +19,6 @@ Run wxPos-config.py to configure the database tables, currently on MySQL only...
 
 The database module is still not stable, and i think it would not work on any other database system than MySQL.
 I should make sure, and then make the small changes for it to "maybe" work.
+
+UPDATE: What I was doing turned out to be almost the same as SQLAlchemy. I was trying to recreate the wheel, but I saw immediately it was too hard and too much work. I had decided to only use it with MySQL.
+Now that i know about SQLAlchemy, I will migrate the app to it (it will be hell of a mess), but i'll stick for now to mysql...
