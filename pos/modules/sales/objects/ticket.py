@@ -9,16 +9,22 @@ import pos.modules.user.objects.user as user
 import pos.modules.customer.objects.customer as customer
 
 class Ticket(common.Item):
-    data_keys = ('user', 'closed', 'currency', 'customer')
+    data_keys = ('user', 'closed', 'currency', 'customer', 'date_open',
+                 'date_close', 'date_paid', 'payment_method',
+                 'paid')
     
     def getData(self):
-        sql = "SELECT comment, currency_id, user_id, customer_id, date_close FROM tickets WHERE id=%s"
+        sql = """SELECT comment, currency_id, user_id, customer_id, date_open,
+date_close, date_paid, payment_method FROM tickets WHERE id=%s
+"""
         params = (self.id,)
         cursor, success = pos.db.query(sql, params)
         if success:
             results = cursor.fetchone()
             if len(results)>0:
-                self.data['comment'], currency_id, user_id, customer_id, self.data['date_close'] = results
+                self.data['comment'], currency_id, user_id, customer_id, \
+                        self.data['date_open'], self.data['date_close'], \
+                        self.data['date_paid'], self.data['payment_method'] = results
                 if currency_id is None:
                     self.data['currency'] = None
                 else:
@@ -28,14 +34,8 @@ class Ticket(common.Item):
                     self.data['customer'] = None
                 else:
                     self.data['customer'] = customer.find(_id=customer_id)
-        
-        sql = "SELECT (date_close IS NOT NULL) as 'closed' FROM tickets WHERE id=%s"
-        params = (self.id,)
-        cursor, success = pos.db.query(sql, params)
-        if success:
-            results = cursor.fetchone()
-            if len(results)>0:
-                self.data['closed'] = bool(results[0])
+                self.data['closed'] = self.data['date_close'] is not None
+                self.data['paid'] = self.data['date_paid'] is not None
 
     def close(self):
         import pos.modules.sales.objects.ticketline as ticketline
@@ -50,6 +50,17 @@ class Ticket(common.Item):
                 if p is None or not p.data['in_stock']:
                     continue
                 p.updateQuantity(tl.data['amount'], 'out')
+        else:
+            return None
+
+    def pay(self, method, paid=True):
+        sql = "UPDATE tickets SET payment_method=%s, date_paid=" + \
+                  ("NOW()" if paid else "NULL") + " WHERE id=%s"
+        params = (method, self.id,)
+        cursor, success = pos.db.query(sql, params)
+        if success and cursor.rowcount == 1:
+            self.obj.getAll(refresh=True)
+            self.getData()
         else:
             return None
 

@@ -9,7 +9,7 @@ def configDB(test=False):
          comment varchar(255) DEFAULT NULL,
          date_open DATETIME DEFAULT NULL,
          date_close DATETIME DEFAULT NULL,
-         payment_method int DEFAULT NULL,
+         payment_method enum('cash', 'cheque', 'voucher', 'card', 'free', 'debt') DEFAULT NULL,
          date_paid DATETIME DEFAULT NULL,
          currency_id int DEFAULT NULL,
          customer_id int DEFAULT NULL,
@@ -19,6 +19,7 @@ def configDB(test=False):
          FOREIGN KEY (customer_id) REFERENCES customers(id),
          FOREIGN KEY (user_id) REFERENCES users(id)
     )""")
+    #payment_method int DEFAULT NULL,
     
     pos.db.query("""CREATE TABLE ticketlines (
          id int AUTO_INCREMENT PRIMARY KEY,
@@ -61,6 +62,7 @@ class ModuleMenu(ModuleMenuBase):
 
     def loadSubItems(self):
         from pos.modules.sales.panels import SalesPanel
+        from pos.modules.sales.panels import DebtsPanel
         
         MenuItem(self.menu, "Main", "Sales", SalesPanel, 'sales')
-        #MenuItem(self.menu, "Main", "Orders", EmptyPanel, 'sales')
+        MenuItem(self.menu, "Main", "Debts", DebtsPanel, 'sales')

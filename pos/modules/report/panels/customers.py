@@ -15,15 +15,17 @@ class CustomersReportPanel(PDFReportPanel):
         PDFReportPanel.__init__(self, parent, validator=ParamValidator, showDateRange=True)
 
         self.catalogList = CustomerCatalogList(self.parametersPanel)
+        self.debtCb = wx.CheckBox(self.parametersPanel, -1, label='Show only tickets paid by debt')
         self.addParameter('Customer', self.catalogList, 'customer', style=wx.EXPAND | wx.ALL)
+        self.addParameter('Only Debt', self.debtCb, 'only_debt', style=wx.EXPAND | wx.ALL)
         
         self._init_sizers()
 
-    def getFilename(self, from_date, to_date, customer):
+    def getFilename(self, from_date, to_date, customer, only_debt):
         return 'customer-%s-%s-%s' % (customer.data['name'], from_date, to_date)
 
-    def generateReport(self, filename, from_date, to_date, customer):
-        return customers_report.generateReport(filename, customer, from_date, to_date)
+    def generateReport(self, filename, from_date, to_date, customer, only_debt):
+        return customers_report.generateReport(filename, customer, from_date, to_date, only_debt)
 
 class ParamValidator(wx.PyValidator):
     def __init__(self, panel, key):
@@ -68,4 +70,6 @@ class ParamValidator(wx.PyValidator):
                 data = item
             else:
                 data = None
+        elif self.key == 'only_debt':
+            data = win.IsChecked()
         return data

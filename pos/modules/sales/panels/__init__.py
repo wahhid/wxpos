@@ -1,5 +1,7 @@
 import wx
 
+from .debts import DebtsPanel
+
 import pos.modules.user.objects.user as user
 
 import pos.modules.currency.objects.currency as currency
@@ -212,9 +214,14 @@ class SalesPanel(wx.Panel):
         event.Skip()
         t = self._doCheckCurrentTicket()
         if t:
-            dlg = PayDialog(None, t)
+            tls = ticketline.find(list=True, ticket=t)
+            total = 0
+            for tl in tls:
+                total += tl.data['amount']*tl.data['sell_price']
+            dlg = PayDialog(None, total, t.data['currency'], t.data['customer'])
             ret = dlg.ShowModal()
             if ret == wx.ID_OK:
+                t.pay(*dlg.payment)
                 t.close()
                 self.setCurrentTicket(None)
 
