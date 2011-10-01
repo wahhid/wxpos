@@ -28,9 +28,13 @@ class Object:
             if _id is not None:
                 matches.append(lambda i: (i.id == _id))
             for key, val in kwargs.iteritems():
-                matches.append(lambda i: (i.data[key] == val))
-            for m in matches:
-                results = filter(m, results)
+                matches.append(lambda i, k=key, v=val: (i.data[k] == v))
+            def global_filter(i, ms=matches):
+                for m in ms:
+                    if not m(i):
+                        return False
+                return True
+            results = filter(global_filter, results)
 
         count = len(results)
         if list or count>1:
@@ -100,6 +104,9 @@ class Item:
             return type(self) != type(el) or self.id != el.id
         except AttributeError:
             return False
+
+    def __repr__(self):
+        return '<%s id=%s>' % (self.__class__.__name__, self.id)
 
     def update(self, **kwargs):
         args_items = filter(lambda (k, v): k in self.data_keys, kwargs.items())

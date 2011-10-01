@@ -5,10 +5,11 @@ import pos.modules.currency.objects.currency as currency
 import pos.modules.sales.objects.ticket as ticket
 import pos.modules.sales.objects.ticketline as ticketline
 
-def getTickets(_from, _to=None):
+def getTickets(c, _from, _to=None, only_debt=True):
     if _to is None:
-        sql = "SELECT id FROM tickets WHERE state>0 AND DATE(date_close) = DATE(%s)"
-        params = (_from.isoformat(),)
+        sql = "SELECT id FROM tickets WHERE state>0 AND DATE(date_close) = DATE(%s) AND customer_id=%s" + \
+                (" AND date_paid IS NULL AND payment_method='debt'" if only_debt else "")
+        params = (_from.isoformat(), c.id)
         cursor, success = pos.db.query(sql, params)
         if success:
             results = cursor.fetchall()
@@ -16,8 +17,9 @@ def getTickets(_from, _to=None):
         else:
             return None
     else:
-        sql = "SELECT id FROM tickets WHERE state>0 AND DATE(date_close)>=DATE(%s) AND DATE(date_close)<=DATE(%s)"
-        params = (_from.isoformat(), _to.isoformat())
+        sql = "SELECT id FROM tickets WHERE state>0 AND DATE(date_close)>=DATE(%s) AND DATE(date_close)<=DATE(%s) AND customer_id=%s" + \
+                (" AND date_paid IS NULL AND payment_method='debt'" if only_debt else "")
+        params = (_from.isoformat(), _to.isoformat(), c.id)
         cursor, success = pos.db.query(sql, params)
         if success:
             results = cursor.fetchall()
@@ -45,7 +47,7 @@ def framePage(canvas,doc):
     #canvas.drawString(4 * inch, 0.75 * inch, "Page %d" % doc.page)
     canvas.restoreState()
 
-def generateReport(filename, c, _from, _to):
+def generateReport(filename, c, _from, _to, only_debt):
     doc = SimpleDocTemplate(filename)
     elements = []
 
@@ -66,7 +68,7 @@ def generateReport(filename, c, _from, _to):
     else:
         elements.append(Paragraph('On: %s' % (_from,), stylesheet['Subtitle']))
 
-    ts = filter(lambda t: t.data["customer"] == c, getTickets(_from, _to))
+    ts = getTickets(c, _from, _to, only_debt)
     
     period_total = 0
     defc = currency.default
@@ -76,7 +78,8 @@ def generateReport(filename, c, _from, _to):
         
         elements.append(Spacer(18,18))
 
-        row = [Paragraph('Ticket #%.3d' % (t.id,), stylesheet['Heading3']),
+        row = [Paragraph('Ticket #%.3d (%s)%s' % (t.id, t.data['payment_method'], \
+                            ' [not paid]' if not t.data['paid'] else ''), stylesheet['Heading3']),
                Paragraph(str(t.data['date_close']), stylesheet['Heading3Right'])]
         info_table = Table(
                       data=[row],

@@ -2,6 +2,8 @@ import pos
 
 import pos.modules.base.objects.common as common
 
+import pos.modules.currency.objects.currency as currency
+
 import pos.modules.customer.objects.customergroup as customergroup
 
 class Customer(common.Item):
@@ -28,6 +30,17 @@ class Customer(common.Item):
             group_ids = map(lambda r: r[0], results)
 
         self.data['groups'] = map(lambda _id: customergroup.find(_id=_id), group_ids)
+
+    def getDebt(self):
+        import pos.modules.sales.objects.ticket as ticket
+        import pos.modules.sales.objects.ticketline as ticketline
+        tickets = ticket.find(list=True, customer=self, payment_method='debt', date_paid=None)
+        self.data['debt'] = 0
+        for t in tickets:
+            tls = ticketline.find(list=True, ticket=t)
+            for tl in tls:
+                self.data['debt'] += tl.data['amount']*(currency.convert(tl.data['sell_price'], t.data['currency'], currency.default))
+        return self.data['debt']
 
 class CustomerObject(common.Object):
     item = Customer
