@@ -9,7 +9,7 @@ from pos.modules.base.objects.idManager import ids
 import pos.menu
 
 class PayDialog(wx.Dialog):
-    def __init_ctrls(self, methods):
+    def __init_ctrls(self, disabled):
         self.totalLbl = wx.StaticText(self, -1, label='Due Amount')
         self.totalTxt = wx.TextCtrl(self, -1, style=wx.TE_READONLY)
         
@@ -25,7 +25,7 @@ class PayDialog(wx.Dialog):
         for p, panel_class in enumerate(panels):
             panel = panel_class(self.mainToolbook, self)
             self.mainToolbook.AddPage(imageId=0, page=panel, select=False, text=panel.label)
-            if not panel.IsAllowed() or panel.payment[0] not in methods:
+            if not panel.IsAllowed() or panel.payment[0] in disabled:
                 toolbar.EnableTool(p+1, False)
             elif selected is None:
                 selected = p
@@ -60,7 +60,7 @@ class PayDialog(wx.Dialog):
         self.mainSizer.AddSizer(self.controlSizer, 0, border=10, flag=wx.BOTTOM | wx.LEFT | wx.RIGHT | wx.EXPAND)
         self.SetSizer(self.mainSizer)
     
-    def __init__(self, parent, total, _currency, _customer, methods=None):
+    def __init__(self, parent, total, _currency, _customer, disabled=[]):
         wx.Dialog.__init__(self, parent, ids['editTicketlineDialog'],
               size=wx.Size(400, 500), title='Pay ticket')
 
@@ -69,7 +69,7 @@ class PayDialog(wx.Dialog):
         self.customer = _customer
         self.payment = None
         
-        self.__init_ctrls(methods if methods is not None else ('cash', 'cheque', 'card', 'voucher', 'free', 'debt'))
+        self.__init_ctrls(disabled)
         self.__init_sizers()
 
         self.totalTxt.SetValue(self.currency.format(self.total))
