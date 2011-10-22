@@ -37,8 +37,13 @@ class PermissionObject(common.Object):
             return None
     
     def dbUpdate(self, _id, **kwargs):
-        sql = "UPDATE permissions SET description=%s WHERE id=%s"
-        params = (description, _id)
+        fields = ('description',)
+        update_str = ",".join([f+"=%s" for f in fields if kwargs.has_key(f)])
+        update_params = [kwargs[f] for f in fields if kwargs.has_key(f)]
+        
+        if len(update_str) == 0: return True
+        sql = "UPDATE permissions SET "+update_str+" WHERE id=%s"
+        params = update_params+[_id]
         cursor, success = self.db.query(sql, params)
         if success:
             return True
