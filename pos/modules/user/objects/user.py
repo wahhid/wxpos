@@ -61,14 +61,18 @@ class UserObject(common.Object):
     
     def dbUpdate(self, _id, **kwargs):
         update = []
-        if password is not None: update.append("password=MD5(%s)")
-        if role_id is not None: update.append("role_id=%s")
+        update_params = []
+        if 'password' in kwargs:
+            update.append("password=MD5(%s)")
+            update_params.append(kwargs['password'])
+        if 'role_id' in kwargs:
+            update.append("role_id=%s")
+            update_params.append(kwargs['role_id'])
         if len(update) == 0: return True
         update_str = ",".join(update)
         
         sql = "UPDATE users SET "+update_str+" WHERE id=%s AND state>0"
-        params = [par for par in (password, role_id) if par is not None]
-        params.append(user_id)
+        params = update_params+[_id]
         cursor, success = pos.db.query(sql, params)
         if success:
             return True

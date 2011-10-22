@@ -5,27 +5,19 @@ import pos.modules.currency.objects.currency as currency
 import pos.modules.sales.objects.ticket as ticket
 import pos.modules.sales.objects.ticketline as ticketline
 
-def getTickets(c, _from, _to=None, only_debt=True):
-    if _to is None:
-        sql = "SELECT id FROM tickets WHERE state>0 AND DATE(date_close) = DATE(%s) AND customer_id=%s" + \
-                (" AND date_paid IS NULL AND payment_method='debt'" if only_debt else "")
-        params = (_from.isoformat(), c.id)
-        cursor, success = pos.db.query(sql, params)
-        if success:
-            results = cursor.fetchall()
-            return map(lambda r: ticket.find(_id=r[0]), results)
-        else:
-            return None
+def getTickets(c, _from, _to, show):
+    show = '(%s)' % (','.join(map(lambda s: "'"+s+"'", show)),)
+    close_date_condition = "DATE(date_close) = DATE(%s)" if _to is None else "DATE(date_close)>=DATE(%s) AND DATE(date_close)<=DATE(%s)"
+    sql = "SELECT id FROM tickets WHERE state>0 AND "+close_date_condition+" AND customer_id=%s" + \
+            " AND payment_method IN %s" % (show,) + \
+            " ORDER BY date_close ASC, date_open ASC, date_paid DESC"
+    params = [_from.isoformat()]+([] if _to is None else [_to.isoformat()])+[c.id]
+    cursor, success = pos.db.query(sql, params)
+    if success:
+        results = cursor.fetchall()
+        return map(lambda r: ticket.find(_id=r[0]), results)
     else:
-        sql = "SELECT id FROM tickets WHERE state>0 AND DATE(date_close)>=DATE(%s) AND DATE(date_close)<=DATE(%s) AND customer_id=%s" + \
-                (" AND date_paid IS NULL AND payment_method='debt'" if only_debt else "")
-        params = (_from.isoformat(), _to.isoformat(), c.id)
-        cursor, success = pos.db.query(sql, params)
-        if success:
-            results = cursor.fetchall()
-            return map(lambda r: ticket.find(_id=r[0]), results)
-        else:
-            return None
+        return None
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, letter
@@ -47,7 +39,7 @@ def framePage(canvas,doc):
     #canvas.drawString(4 * inch, 0.75 * inch, "Page %d" % doc.page)
     canvas.restoreState()
 
-def generateReport(filename, c, _from, _to, only_debt):
+def generateReport(filename, c, _from, _to, show):
     doc = SimpleDocTemplate(filename)
     elements = []
 
@@ -68,7 +60,7 @@ def generateReport(filename, c, _from, _to, only_debt):
     else:
         elements.append(Paragraph('On: %s' % (_from,), stylesheet['Subtitle']))
 
-    ts = getTickets(c, _from, _to, only_debt)
+    ts = getTickets(c, _from, _to, show)
     
     period_total = 0
     defc = currency.default
