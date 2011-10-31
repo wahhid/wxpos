@@ -6,23 +6,27 @@ import wx
 
 print '*Creating database...'
 import pos.database
-pos.db = pos.database.DB()
 
 print '*Importing modules...'
 import pos.modules
 
+from pos.modules.base.dialogs.dbconfig import ConfigDialog
+
 def run():
+    app = wx.PySimpleApp()
+    dlg = ConfigDialog(None)
+    dlg.ShowModal()
+    pos.db = pos.database.DB()
     if not pos.db.isConnected():
         print '*Database connection error.'
         print '*Aborting...'
     else:
-        app = wx.PySimpleApp()
+        retCode = wx.MessageBox('Reconfigure Database?', 'Database config', style=wx.YES_NO | wx.ICON_QUESTION)
+        reset = (retCode == wx.YES)
+        if not reset:
+            return
         retCode = wx.MessageBox('Insert Test Values?', 'Database config', style=wx.YES_NO | wx.ICON_QUESTION)
-        app.MainLoop()
         test = (retCode == wx.YES)
         print '*Configuring database...'
         print '*Test values %s...' % ('on' if test else 'off',)
         pos.modules.configDB(test)
-
-if __name__ == '__main__':
-    run()
