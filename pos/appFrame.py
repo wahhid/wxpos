@@ -15,10 +15,10 @@ class AppFrame(wx.Frame):
         self.SetSizer(self.mainSizer)
 
     def _init_main(self):
-        self.mainToolbook = wx.Toolbook(self, ids['mainToolbook'])
+        self.mainToolbook = wx.Toolbook(self, -1)
 
     def __init__(self, parent):
-        wx.Frame.__init__(self, parent, ids['mainFrame'],
+        wx.Frame.__init__(self, parent, -1,
                 size=wx.Size(800, 600), title='App Frame')
 
         accTable = wx.AcceleratorTable([
@@ -32,8 +32,6 @@ class AppFrame(wx.Frame):
         self._init_sizers()
 
         self.Bind(wx.EVT_CLOSE, self.OnClose)
-
-        self.updateMenu()
 
     def OnCtrlTabCommand(self, event):
         event.Skip()
@@ -51,7 +49,7 @@ class AppFrame(wx.Frame):
         pos.app.app.Exit()
         #event.Skip()
     
-    def updateMenu(self):
+    def loadMenu(self):
         self.mainToolbook.AssignImageList(pos.menu.il)
         for item in pos.menu.getItems():
             current_role = user.current.data['role']
