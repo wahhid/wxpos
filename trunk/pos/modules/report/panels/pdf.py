@@ -77,8 +77,7 @@ class PDFReportPanel(wx.Panel):
         parameters = self.parameters.copy()
         if self.show_date_range:
             from_date, to_date = self.dateRange.GetValue()
-
-        parameters.update({'from_date': from_date, 'to_date': to_date})
+            parameters.update({'from_date': from_date, 'to_date': to_date})
 
         filename = './reports/%s.pdf' % (self.getFilename(**parameters),)
         filename = os.path.abspath(filename)
@@ -99,7 +98,7 @@ class PDFReportPanel(wx.Panel):
         event.Skip()
 
         if not self.paramPanel.Validate():
-            wx.MessageBox('Invalid parmaeters.', 'Generate Report', style=wx.OK | wx.ICON_INFORMATION)
+            wx.MessageBox('Invalid parameters.', 'Generate Report', style=wx.OK | wx.ICON_INFORMATION)
             return
         
         filename = self._generateReport()

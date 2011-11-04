@@ -1,10 +1,5 @@
 import wx
 
-import datetime
-import os
-
-from pos.modules.base.objects.idManager import ids
-
 from pos.modules.customer.windows.customerCatalogList import CustomerCatalogList
 
 from .pdf import PDFReportPanel
