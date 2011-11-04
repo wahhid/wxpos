@@ -16,7 +16,9 @@ class ModuleMenu(ModuleMenuBase):
             MenuItem(self.menu, "Reports", "Customers", CustomersReportPanel)
         if pos.modules.isInstalled('stock'):
             from pos.modules.report.panels import StockReportPanel
+            from pos.modules.report.panels import StockDiaryReportPanel
             MenuItem(self.menu, "Reports", "Stock", StockReportPanel)
+            MenuItem(self.menu, "Reports", "Stock Diary", StockDiaryReportPanel)
         if pos.modules.isInstalled('user'):
             from pos.modules.report.panels import UsersReportPanel
             MenuItem(self.menu, "Reports", "Users", UsersReportPanel)
