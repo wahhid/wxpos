@@ -12,10 +12,12 @@ The icons are taken from the pos/images/menu directory although it should not be
     * Customers
     * Customer Groups
     * (TODO) Customer Discounts
-  * (TODO) Reports
+  * Reports
     * Stock
     * Sales
-    * Close cash
+    * User
+    * Customer
+    * (TODO) Close cash
   * Users
     * Users
     * Roles
@@ -23,9 +25,10 @@ The icons are taken from the pos/images/menu directory although it should not be
   * Stock
     * Products
     * Categories
-    * (TODO) Stock diary
+    * Stock Diary
   * System
-    * (TODO) Configuration
+    * Configuration
     * Currencies
   * Administration
     * User
+    * (TODO) ...
