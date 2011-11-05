@@ -1,0 +1,61 @@
+from distutils.core import setup
+import py2exe
+
+import shutil
+try:
+    shutil.rmtree('build')
+except:
+    pass
+try:
+    shutil.rmtree('dist')
+except:
+    pass
+
+# Data Files
+from glob import glob
+data_files = [('images', glob('./images/*.*')),
+              ('images/menu', glob('./images/menu/*.*')),
+              ('images/commands', glob('./images/commands/*.*')),]
+
+# Scripts
+run = {'script': "wxPos-no-console.py",
+       'dest_base': "run",
+       'version': "0.6",
+       'name': "wxPos main executable"
+       }
+
+config = {'script': "wxPos-config.py",
+          'dest_base': "config",
+          'version': "0.6",
+          'name': "wxPos configuration executable"
+          }
+
+# Options
+options = {}
+
+# Options Py2Exe
+includes = []
+excludes = []
+packages = ["pos", "reportlab"]
+py2exe_options = {"py2exe": {#"compressed": 0, 
+                          #"optimize": 0,
+                          "includes": includes,
+                          "excludes": excludes,
+                          "packages": packages,
+                          #"dll_excludes": dll_excludes,
+                          #"bundle_files": 3,
+                          "dist_dir": "dist",
+                          #"xref": False,
+                          #"skip_archive": False,
+                          #"ascii": False,
+                          #"custom_boot_script": '',
+                         }
+              }
+options.update(py2exe_options)
+
+# Main setup call
+setup(windows=[run],
+      console=[config],
+      options=options,
+      data_files=data_files
+      )
