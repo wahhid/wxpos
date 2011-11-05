@@ -1,10 +1,12 @@
+#summary Detailed description of all the modules.
+
 = Modules =
 
 A wxpos module is a part of the software which has a specific role in it: as "user" that gives the ability to login to the software or "stock" that allows the user to keep track of his stock, etc... Got the idea?
 
 It is a directory in the pos/modules/ directory which can/must contain the following elements: (suppose the name of the module "mname")
   * pos/modules/mname/__init__.py that defines the dependencies tuple (that contains a list of other modules on which it depends) and a !ModuleMenu class (which defines the menu items this module should have in the menu) and the config function that will configure the db tables and stuff for that module (and some test values).
-  * pos/modules/mname/objects/ A python module, most usually based on the "base" module objects that defines an interface to the database system. Anyway see the pos/modules/base/objects/common.py and the pos/modules/user/objects/user.py for ex to understand it, it's not that complicated...
+  * pos/modules/mname/objects/ A python module, usually based on the "base" module objects that defines an interface to the database system. Anyway see the pos/modules/base/objects/common.py and the pos/modules/user/objects/user.py for ex to understand it, it's not that complicated...
   * pos/modules/mname/panels/ Contains the panels used in the main toolbook of the app frame. That means every menu item should have a panel defined in that python module associated with it, as the the app frame contains essentially only a wx.Toolbook whose pages are the menu items and the panels to which each one is associated...
   * pos/modules/mname/dialogs/ Contains the dialogs that could be used for the functionality of the module to be complete...
   * pos/modules/mname/windows/ Contains the common windows/widgets (ex. listbox, controls, ...) that are used in many panels/dialogs...
@@ -18,7 +20,7 @@ That is a list of all modules done and to be done:
 
 === Content ===
 Base module that provides the most basic functionality of the pos system. It is a base that should be extended by other modules.
-    * idManager: object: Keeps track of given ids to windows in a dict. If a key is missing, it assigns a wx.NewId() to that key.
+    * idManager: object: Keeps track of given ids to windows in a dict. If a key is missing, it assigns a wx.NewId() to that key. This is no longer essential as ids are used rarely.
     * common: object: Base module for easy connection between database and object. Provides a set of similar functions for deleting, updating, adding and finding items.
     * manage: panel: Base panel for CRUD operation (new item, delete item, update item, list items)
 
@@ -28,9 +30,9 @@ Base module that provides the most basic functionality of the pos system. It is 
 == CURRENCY ==
 
 === Content ===
-Curency module that manages multiple currencies, with their symbols, default currency and conversion between one another
+Curency module that manages multiple currencies, with their symbols, default currency and conversion between one and another
   * currency: object: Allows conversion between units, retreiving the default one and all the other functionality of the currency module (name, symbol, value for conversion). ex: 1500 LL = 1$ => LL value=1; $ value=1500x1 = 1500
-  * currencies: panel: UI based on managePanel that allows to editing of value and name and symbol of the currencies. No deletion allowed.
+  * currencies: panel: UI based on managePanel that allows editing of value and name and symbol of the currencies. No deletion allowed, it just complicates things if you delete a currency which is used for product prices. It can be allowed, but i don't see any benefit from doing so.
 
 === TODO ===
   * add the ability to change the default currency
@@ -52,15 +54,15 @@ A customer might be a person or a company that frequently purchases from the com
 == USER ==
 
 === Content ===
-A user is a person who can login and use the application. Every one of them has a password, a role, and specific permissions that limit its use of it.
+A user is a person who can login and use the application. Every one of them has a password, a role, and specific permissions that limit its use of it. These are usually the employees, manager and owners of the shop.
   * user: object: Username, password
   * role: object: Name, list of permissions
   * permission: object: Name, description of what is allowed to do with that one.
   * users,roles,permissions: panel: Based on ManagePanel. Allow management of users, their roles, their permissions.
-  * user: panel: Alllows lmited editing of the currently logged in user by himself.
+  * user: panel: Allows limited editing of the currently logged in user by himself.
 
 === TODO ===
-
+  * the permission thing makes no sense, unless some super user can assign that permission to that module or that function in that module. Until now, it is not done. The permission system is still effective but addition of permissions makes no sense.
 
 == STOCK ==
 
@@ -71,14 +73,14 @@ Provides functionality for adding and removing products that can be sold in the 
   * categories,products: panel: Based on ManagePanel. Allow management of categories and products.
 
 === TODO ===
-  * add ability to set buy price, sell price, taxes (like posper)
+  * add ability to set buy price, sell price, taxes (like in [http://posper.org POSper])
 
 
 == SALES ==
 
 === Content ===
-Provides the ability to create tickets and sell items to clients and customers with browsable categories and products.
-  * ticket: object: list of lines of sold items (which can and can not be based on products) (may be assigned to a customer)
+Provides the ability to create tickets and sell items to customers and customers with browsable categories and products and customers.
+  * ticket: object: list of lines of sold items (which can be based on products or not) (may be assigned to a customer)
   * ticketline: object: line which contains a description of what is sold, price and amount.
   * main: panel: Main panel in which is available a catalog(products/customers), a ticketline list and ticket manipulation actions.
 
@@ -104,7 +106,8 @@ Provides the abilty to generate reports of stock, payments, etc. on specific tim
 Generates reports in the PDF format,( maybe excel also(later)) using reportlab.
 
 === TODO ===
-Kind of working.
+  * Arrange the filter process to make the reports as customizable as possible.
+  * Add the ability to choose the design of the report pages, plus the header and footer and stuff.
 
 
 == TAXES ==
