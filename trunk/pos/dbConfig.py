@@ -21,7 +21,7 @@ def run():
         print '*Database connection error.'
         print '*Aborting...'
     else:
-        retCode = wx.MessageBox('Reconfigure Database?', 'Database config', style=wx.YES_NO | wx.ICON_QUESTION)
+        retCode = wx.MessageBox('Reconfigure Database?\nThis will drop the database you chose and recreate it.', 'Database config', style=wx.YES_NO | wx.ICON_QUESTION)
         reset = (retCode == wx.YES)
         if not reset:
             return
