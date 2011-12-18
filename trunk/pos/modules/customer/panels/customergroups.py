@@ -1,15 +1,15 @@
 import wx
 
-from pos.modules.base.objects.idManager import ids
+import pos
 
-import pos.modules.customer.objects.customer as customer
 import pos.modules.customer.objects.customergroup as customergroup
+from pos.modules.customer.objects.customergroup import CustomerGroup
 
 from pos.modules.base.panels import ManagePanel
 
-class CustomergroupsPanel(wx.Panel, ManagePanel):
+class CustomerGroupsPanel(wx.Panel, ManagePanel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, id=ids['customergroupsPanel'], parent=parent, style=wx.TAB_TRAVERSAL)
+        wx.Panel.__init__(self, parent, -1, style=wx.TAB_TRAVERSAL)
         
         self._init_panel('Customer Groups', DataValidator)
         self.createField('Name', wx.TextCtrl, 'name', '')
@@ -17,7 +17,7 @@ class CustomergroupsPanel(wx.Panel, ManagePanel):
                          style=wx.TE_MULTILINE)
         self._init_fields()
 
-    getItems = lambda self: [[cg, cg.data['name']] for cg in customergroup.find(list=True)]
+    getItems = lambda self: pos.database.session().query(CustomerGroup, CustomerGroup.name).all()
     newItem = lambda self: customergroup.add(**self.data)
     updateItem = lambda self, cg: cg.update(**self.data)
     canEditItem = lambda self, cg: True
@@ -26,7 +26,7 @@ class CustomergroupsPanel(wx.Panel, ManagePanel):
     def fillData(self):
         cg = self.getCurrentItem()
         if cg is None: return
-        self.data = cg.data.copy()
+        cg.fillDict(self.data)
 
 class DataValidator(wx.PyValidator):
     def __init__(self, panel, key):

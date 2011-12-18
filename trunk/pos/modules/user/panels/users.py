@@ -1,17 +1,17 @@
 import wx
 
-from pos.modules.base.objects.idManager import ids
+import pos
 
 import pos.modules.user.objects.user as user
-import pos.modules.user.objects.role as role
-import pos.modules.user.objects.permission as permission
+from pos.modules.user.objects.user import User
+from pos.modules.user.objects.role import Role
+from pos.modules.user.objects.permission import Permission
 
 from pos.modules.base.panels import ManagePanel
 
 class UsersPanel(wx.Panel, ManagePanel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, ids['usersPanel'],
-                style=wx.TAB_TRAVERSAL)
+        wx.Panel.__init__(self, parent, -1, style=wx.TAB_TRAVERSAL)
 
         self._init_panel('Users', DataValidator)
         self.createField('Username', wx.TextCtrl, 'username', '')
@@ -29,7 +29,7 @@ class UsersPanel(wx.Panel, ManagePanel):
         self.getField('passwordCheck').Bind(wx.EVT_CHECKBOX, self.OnPasswordCheckbox)
         self.getField('role').Bind(wx.EVT_CHOICE, self.OnRoleChoice)
 
-    getItems = lambda self: [[u, u.data['username']] for u in user.find(list=True)]
+    getItems = lambda self: pos.database.session().query(User, User.username).all()
     newItem = lambda self: user.add(username=self.data['username'], password=self.data['password1'], role=self.data['role'])
     def updateItem(self, u):
         if self.data['passwordCheck']:
@@ -40,22 +40,26 @@ class UsersPanel(wx.Panel, ManagePanel):
     canDeleteItem = lambda self, u: user.current != u
 
     def fillData(self):
-        self.getField('role').SetItems(map(lambda r: r.data['name'], role.find(list=True)))
+        session = pos.database.session()
+        role_names = session.query(Role.name).all()
+        self.getField('role').SetItems([r[0] for r in role_names])
         u = self.getCurrentItem()
         if u is None: return
         self.getField('username').Enable(False)
-        self.data = {'username': u.data['username'], 'role': u.data['role'],
-                     'permissions': u.data['role'].data['permissions'],
+        self.data = {'username': u.username, 'role': u.role,
+                     'permissions': u.role.permissions,
                      'password1': '', 'password2': '',
                      'passwordCheck': False}
 
     def OnRoleChoice(self, event):
         event.Skip()
         role_name = event.GetString()
+        session = pos.database.session()
+        r = session.query(Role).filter_by(name=role_name).one()
         self.getField('permissions').ClearAll()
-        for p in role.find(name=role_name).data['permissions']:
+        for p in r.permissions:
             item = wx.ListItem()
-            item.SetText(p.data['name'])
+            item.SetText(p.name)
             self.getField('permissions').InsertItem(item)
 
     def OnPasswordCheckbox(self, event):
@@ -106,12 +110,12 @@ class DataValidator(wx.PyValidator):
                 if data is None:
                     win.SetSelection(-1)
                 else:
-                    win.SetStringSelection(data.data['name'])
+                    win.SetStringSelection(data.name)
             elif self.key == 'permissions':
                 win.ClearAll()
                 for p in data:
                     item = wx.ListItem()
-                    item.SetText(p.data['name'])
+                    item.SetText(p.name)
                     win.InsertItem(item)
             elif self.key == 'passwordCheck':
                 win.SetValue(data)
@@ -142,7 +146,8 @@ class DataValidator(wx.PyValidator):
         if self.key == 'username':
             data = win.GetValue()
         elif self.key == 'role':
-            data = role.find(name=win.GetStringSelection())
+            session = pos.database.session()
+            data = session.query(Role).filter_by(name=win.GetStringSelection()).one()
         elif self.key == 'permissions':
             data = None
         elif self.key == 'passwordCheck':

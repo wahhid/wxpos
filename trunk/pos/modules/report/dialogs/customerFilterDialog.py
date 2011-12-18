@@ -1,8 +1,8 @@
 import wx
 
-import pos.modules.currency.objects.currency as currency
+import pos
 
-from pos.modules.base.objects.idManager import ids
+from pos.modules.currency.objects.currency import Currency
 
 class CustomerFilterDialog(wx.Dialog):
     def __init_ctrls(self):
@@ -10,7 +10,6 @@ class CustomerFilterDialog(wx.Dialog):
         self.cancelBtn = wx.Button(self, wx.ID_CANCEL, label='Cancel')
     
     def __init_sizers(self):
-
         self.controlSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
         self.controlSizer.Add(wx.Size(0, 0), 1, flag=wx.EXPAND | wx.ALL)
         self.controlSizer.Add(self.okBtn, 0, flag=wx.CENTER | wx.ALL)
@@ -48,8 +47,9 @@ class CustomerFilterDialog(wx.Dialog):
         self.paramSizer.Add(self.showSizer, 0)
 
         self.currencyChoice = wx.Choice(self, -1, validator=validator(parent, 'currency'))
-        currency_choices = ['']+map(lambda c: c.data['symbol'], currency.find(list=True))
-        self.currencyChoice.SetItems(currency_choices)
+        session = pos.database.session()
+        currency_symbols = session.query(Currency.symbol).all()
+        self.currencyChoice.SetItems(['[Any]']+[c[0] for c in currency_symbols])
         self.paramSizer.Add(self.currencyChoice, 0)
 
         self.__init_ctrls()

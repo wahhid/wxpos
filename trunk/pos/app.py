@@ -6,26 +6,23 @@ print '*Python', sys.version, 'on', sys.platform
 import wx
 print '*Running on wxPython', wx.version()
 
-import ConfigParser
-
 import pos
-
-pos.config = ConfigParser.SafeConfigParser()
-pos.config.read('wxpos.cfg')
-
-print '*Creating IdManager...'
-import pos.modules.base.objects.idManager as idManager
-idManager.init()
 
 print '*Creating menu...'
 import pos.menu
 pos.menu.init()
 
-print '*Importing modules...'
-import pos.modules
-
 print '*Importing database...'
 import pos.database
+pos.database.init()
+
+print '*Importing modules...'
+import pos.modules
+pos.modules.init()
+
+print '*Creating IdManager...'
+from pos.modules.base.objects import idManager
+idManager.init()
 
 class PosApp(wx.App):
     def __init__(self, config, redirect):
@@ -39,9 +36,6 @@ class PosApp(wx.App):
             return self.runApp()
 
     def runApp(self):
-        print '*Creating database...'
-        pos.db = pos.database.DB()
-        
         print '*Importing app frame'
         from pos.appFrame import AppFrame
         
@@ -63,16 +57,34 @@ class PosApp(wx.App):
         return True
 
     def requireLogin(self):
-        from pos.modules.user.dialogs.loginDialog import LoginDialog
+        from pos.modules.user.dialogs import LoginDialog
         login = LoginDialog(None)
         result = login.ShowModal()
         return (result == wx.ID_OK)
 
     def runConfig(self):
-        wx.MessageBox('''No configuration file detected. Please run wxpos-config.
-Configuration frame not done yet.''',
-                      'First Run',
-                      style=wx.OK | wx.ICON_INFORMATION)
+        from pos.modules.base.dialogs.dbconfig import ConfigDialog
+        dlg = ConfigDialog(None)
+        retCode = dlg.ShowModal()
+        cont = (retCode == wx.ID_OK)
+        if not cont:
+            return False
+        
+        print '*Restarting database...'
+        pos.database.restart()
+        
+        retCode = wx.MessageBox('Reconfigure Database?\nThis will drop the database you chose and recreate it.', 'Database config', style=wx.YES_NO | wx.ICON_QUESTION)
+        reset = (retCode == wx.YES)
+        if not reset:
+            return False
+        print '*Configuring database...'
+        pos.modules.configDB()
+        retCode = wx.MessageBox('Insert Test Values?', 'Database config', style=wx.YES_NO | wx.ICON_QUESTION)
+        test = (retCode == wx.YES)
+        print '*Test values are %s...' % ('on' if test else 'off',)
+        if test:
+            pos.modules.configTestDB()
+        print '*Done.'
         return False
 
 def run(config=False):

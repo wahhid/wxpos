@@ -1,7 +1,3 @@
-import wx
-
-from pos.modules.base.objects.idManager import ids
-
 from .pdf import PDFReportPanel
 import pos.modules.report.objects.sales as sales_report
 

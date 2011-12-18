@@ -1,5 +1,3 @@
-import pos
-
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, letter
 from reportlab.lib.units import inch
@@ -20,7 +18,6 @@ stylesheet.add(ParagraphStyle(name='Subtitle',
                alias='subtitle')
 
 class PDFReport:
-
     def __init__(self, filename, title, subtitle=None, date_range=None):
         self.doc = SimpleDocTemplate(filename)
         self.elements = []
@@ -53,7 +50,6 @@ class PDFReport:
 
     def build(self):
         self.doc.build(self.elements, onFirstPage=self.onFirstPage, onLaterPages=self.onLaterPage)
-        
         return self.doc
 
     def onFirstPage(self, canvas, doc):
@@ -107,9 +103,6 @@ class PDFReport:
 
 import pos.modules.currency.objects.currency as currency
 
-import pos.modules.sales.objects.ticket as ticket
-import pos.modules.sales.objects.ticketline as ticketline
-
 class TicketlistPDFReport(PDFReport):
     
     def __init__(self, filename, title, subtitle=None, date_range=None, tickets=[]):
@@ -118,37 +111,31 @@ class TicketlistPDFReport(PDFReport):
     
     def _init_content(self):
         period_total = 0
-        defc = currency.default
+        def_c = currency.get_default()
         headers = ('Description', 'Price', 'Amount', 'Total')
         for t in self.tickets:
-            tls = ticketline.find(list=True, ticket=t)
-
-            row = [Paragraph('Ticket #%.3d (%s)%s' % (t.id, t.data['payment_method'], \
-                                ' [not paid]' if not t.data['paid'] else ''), stylesheet['Heading3']),
-                   Paragraph(str(t.data['date_close']), stylesheet['Heading3Right'])]
+            row = [Paragraph('Ticket #%.3d (%s)%s' % (t.id, t.payment_method, \
+                                ' [not paid]' if not t.paid else ''), stylesheet['Heading3']),
+                   Paragraph(str(t.date_close), stylesheet['Heading3Right'])]
             info_table = self.doTable(data=[row])
             #[doc.width/2.0]*2
 
             data = []
-            tc = t.data['currency']
-            total = 0
+            tc = t.currency
+            tls = t.ticketlines
             for tl in tls:
-                description = tl.data['description']
-                sell_price = tl.data['sell_price']
-                amount = tl.data['amount']
-                data.append([description,
-                             tc.format(sell_price),
-                             'x%d' % (amount,),
-                             tc.format(amount*sell_price)])
-
-                total += tl.data['amount']*tl.data['sell_price']
+                data.append([tl.description,
+                             tc.format(tl.sell_price),
+                             'x%d' % (tl.amount,),
+                             tc.format(tl.amount*tl.sell_price)])
+            
+            total = t.total
             footer = ['', '', 'Sub Total', tc.format(total)]
-            period_total += currency.convert(total, tc, defc)
+            period_total += currency.convert(total, tc, def_c)
 
             #colwidths = ['*']+['17%']*3
             table = self.doTable(data=data, header=headers, footer=footer)
 
-        total_para = Paragraph('Total: %s' % (defc.format(period_total),),
-                               stylesheet['Heading3Right'])
+        total_para = Paragraph('Total: %s' % (def_c.format(period_total),), stylesheet['Heading3Right'])
         self.elements.append(Spacer(36,36))
         self.elements.append(total_para)
