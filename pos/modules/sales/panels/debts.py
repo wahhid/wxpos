@@ -1,15 +1,12 @@
 import wx
 
-from pos.modules.customer.windows.customerCatalogList import CustomerCatalogList
-import pos.modules.customer.objects.customer as customer
+import pos
 
-import pos.modules.currency.objects.currency as currency
+from pos.modules.sales.objects.ticket import Ticket
 
-import pos.modules.sales.objects.ticket as ticket
+from pos.modules.customer.windows import CustomerCatalogList
 
-from ..dialogs.payDialog import PayDialog
-
-from pos.modules.base.objects.idManager import ids
+from ..dialogs import PayDialog
 
 class DebtsPanel(wx.Panel):
     def _init_sizers(self):
@@ -51,37 +48,47 @@ class DebtsPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1, style=wx.TAB_TRAVERSAL)
 
-        self.current_debt = 0
-
         self._init_main()
         self._init_sizers()
+        
+        self.setCustomer(None)
 
-        self.payBtn.Enable(False)
+    def setCustomer(self, c):
+        self.customer = c
+        if c is not None:
+            self.current_debt = self.customer.debt
+            self.max_debt = self.customer.max_debt
+            
+            self.customerTxt.SetValue(self.customer.name)
+            self.currentDebtTxt.SetValue(self.customer.currency.format(self.current_debt))
+            self.maxDebtTxt.SetValue('[None]' if self.max_debt is None else self.customer.currency.format(self.max_debt))
+            self.payBtn.Enable(True)
+        else:
+            self.current_debt = None
+            self.max_debt = None
+            
+            self.customerTxt.SetValue('[None]')
+            self.currentDebtTxt.SetValue('[None]')
+            self.maxDebtTxt.SetValue('[None]')
+            self.payBtn.Enable(False)
 
     def OnCustomerCatalogItemActivate(self, event):
         event.Skip()
         selected = self.customerList.GetFirstSelected()
         c, image_id = self.customerList.getItem(selected)
         if c is not None and image_id == 1:
-            self.customer = c
-            self.current_debt = c.getDebt()
-            self.customerTxt.SetValue(c.data['name'])
-            self.currentDebtTxt.SetValue(currency.default.format(self.current_debt))
-            max_debt = c.data['max_debt']
-            if max_debt is None:
-                self.maxDebtTxt.SetValue('')
-            else:
-                self.maxDebtTxt.SetValue(str(max_debt))
-            self.payBtn.Enable(True)
+            self.setCustomer(c)
         else:
-            self.customer = None
-            self.payBtn.Enable(False)
+            self.setCustomer(None)
 
     def OnPayButton(self, event):
         event.Skip()
-        dlg = PayDialog(None, self.current_debt, currency.default, None)
+        dlg = PayDialog(None, self.current_debt, self.customer.currency, self.customer, disabled=['debt'])
         ret = dlg.ShowModal()
         if ret == wx.ID_OK:
-            tickets = ticket.find(list=True, customer=self.customer, payment_method='debt', date_paid=None)
-            for t in tickets:
+            session = pos.database.session()
+            unsettled_tickets = session.query(Ticket).filter(Ticket.customer == self.customer,
+                                                             Ticket.payment_method == 'debt',
+                                                             ~Ticket.paid).all()
+            for t in unsettled_tickets:
                 t.pay(*dlg.payment)

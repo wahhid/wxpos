@@ -1,29 +1,25 @@
 import pos
 
+from sqlalchemy import func
+
 from pos.modules.report.objects.pdf import TicketlistPDFReport
 
-import pos.modules.sales.objects.ticket as ticket
+from pos.modules.sales.objects.ticket import Ticket
 
 def getTickets(c, _from, _to, show):
-    show = '(%s)' % (','.join(map(lambda s: "'"+s+"'", show)),)
-    close_date_condition = "DATE(date_close) = DATE(%s)" if _to is None else "DATE(date_close)>=DATE(%s) AND DATE(date_close)<=DATE(%s)"
-    sql = "SELECT id FROM tickets WHERE state>0 AND "+close_date_condition+" AND customer_id=%s" + \
-            " AND payment_method IN %s" % (show,) + \
-            " ORDER BY date_close ASC, date_open ASC, date_paid DESC"
-    params = [_from.isoformat()]+([] if _to is None else [_to.isoformat()])+[c.id]
-    cursor, success = pos.db.query(sql, params)
-    if success:
-        results = cursor.fetchall()
-        return map(lambda r: ticket.find(_id=r[0]), results)
+    session = pos.database.session()
+    query = session.query(Ticket).filter((Ticket.customer == c) & Ticket.payment_method.in_(show))
+    if _to is None:
+        query = query.filter(func.date(Ticket.date_close) == func.date(_from))
     else:
-        return None
+        query = query.filter(func.date(Ticket.date_close) >= func.date(_from) & func.date(Ticket.date_close) <= func.date(_to))
+    query = query.order_by(Ticket.date_close.asc(), Ticket.date_open.asc(), Ticket.date_paid.desc())
+    return query.all()
 
 def generateReport(filename, c, _from, _to, show):
-    ts = getTickets(c, _from, _to, show)
-    
     rep = TicketlistPDFReport(filename, 'Customer Report',
-                              'Customer: %s' % (c.data['name'],),
+                              'Customer: %s' % (c.name,),
                               (_from, _to),
-                              tickets=ts)
+                              tickets=getTickets(c, _from, _to, show))
 
     return rep.build()

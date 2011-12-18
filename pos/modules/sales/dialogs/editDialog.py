@@ -1,7 +1,5 @@
 import wx
 
-from pos.modules.base.objects.idManager import ids
-
 class EditDialog(wx.Dialog):
     def __init_ctrls(self):
         self.descriptionLbl = wx.StaticText(self, -1, label='Description')
@@ -52,7 +50,7 @@ class EditDialog(wx.Dialog):
         self.mainSizer.Fit(self)
     
     def __init__(self, parent, data):
-        wx.Dialog.__init__(self, parent, ids['editTicketlineDialog'],
+        wx.Dialog.__init__(self, parent, -1,
               size=wx.Size(400, 500), title='Edit ticketline')
 
         self.data = data
@@ -64,9 +62,9 @@ class EditDialog(wx.Dialog):
             self.productTxt.SetValue('[None]')
             self.maxTxt.SetValue('[None]')
         else:
-            self.productTxt.SetValue(p.data['name'])
-            if p.data['in_stock']:
-                self.maxTxt.SetValue(str(p.data['quantity']))
+            self.productTxt.SetValue(p.name)
+            if p.in_stock:
+                self.maxTxt.SetValue(str(p.quantity))
             else:
                 self.maxTxt.SetValue('[None]')
 
@@ -83,7 +81,7 @@ class EditValidator(wx.PyValidator):
         if self.key == 'amount':
             data = win.GetValue()
             p = self.dialog.data['product']
-            if p is not None and p.data['in_stock'] and p.data['quantity']<data:
+            if p is not None and p.in_stock and p.quantity<data:
                 wx.MessageBox('Amount exceeds the product quantity in stock!', 'Warning', wx.OK | wx.ICON_WARNING)
         return True
 

@@ -2,9 +2,7 @@ import wx
 
 import os
 
-from pos.modules.report.windows.dateRange import DateRange
-
-from pos.modules.base.objects.idManager import ids
+from pos.modules.report.windows import DateRange
 
 try:
     from wx.lib.pdfviewer import pdfViewer, pdfButtonPanel

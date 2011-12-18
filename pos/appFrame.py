@@ -1,12 +1,15 @@
 import wx
 
-import pos.app
+import pos
 
 import pos.menu
+
 from pos.modules.base.objects.idManager import ids
 
-import pos.modules.user.objects.user as user
-import pos.modules.user.objects.permission as permission
+import pos.modules
+if pos.modules.isInstalled('user'):
+    import pos.modules.user.objects.user as user
+    from pos.modules.user.objects.permission import Permission
 
 class AppFrame(wx.Frame):
     def _init_sizers(self):
@@ -51,17 +54,30 @@ class AppFrame(wx.Frame):
     
     def loadMenu(self):
         self.mainToolbook.AssignImageList(pos.menu.il)
-        for item in pos.menu.getItems():
-            current_role = user.current.data['role']
-            p = None if item.perm is None else permission.find(name=item.perm)
-            if current_role.isPermitted(p):
+        if pos.modules.isInstalled('user'):
+            for item in pos.menu.getItems():
+                current_role = user.current.role
+                session = pos.database.session()
+                # TODO arrange that query
+                permission_in_role = session.query(Permission).filter((Permission.name == item.perm) & \
+                                                                      Permission.roles.contains(user.current.role))
+                if item.perm is None or permission_in_role.count() == 1:
+                    children = []
+                    for i in item.children:
+                        permission_in_role = session.query(Permission).filter((Permission.name == i.perm) & \
+                                                                              Permission.roles.contains(user.current.role))
+                        if i.perm is None or permission_in_role.count() == 1:
+                            children.append(i)
+                    page = self.getToolbookPage(children)
+                    self.mainToolbook.AddPage(imageId=item.image, page=page, select=False, text=item.label)
+        else:
+            for item in pos.menu.getItems():
                 children = []
                 for i in item.children:
-                    p = None if i.perm is None else permission.find(name=i.perm)
-                    if current_role.isPermitted(p):
-                        children.append(i)
+                    children.append(i)
                 page = self.getToolbookPage(children)
                 self.mainToolbook.AddPage(imageId=item.image, page=page, select=False, text=item.label)
+
 
     def getToolbookPage(self, items):
         count = len(items)

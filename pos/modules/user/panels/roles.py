@@ -1,35 +1,37 @@
 import wx
 
-from pos.modules.base.objects.idManager import ids
+import pos
 
 import pos.modules.user.objects.user as user
 import pos.modules.user.objects.role as role
-import pos.modules.user.objects.permission as permission
+from pos.modules.user.objects.role import Role
+from pos.modules.user.objects.permission import Permission
 
 from pos.modules.base.panels import ManagePanel
 
 class RolesPanel(wx.Panel, ManagePanel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, ids['rolesPanel'],
-                style=wx.TAB_TRAVERSAL)
+        wx.Panel.__init__(self, parent, -1, style=wx.TAB_TRAVERSAL)
 
         self._init_panel('Roles', DataValidator)
         self.createField('Name', wx.TextCtrl, 'name', '')
         self.createField('Permissions', wx.CheckListBox, 'permissions', [])
         self._init_fields()
 
-    getItems = lambda self: [[r, r.data['name']] for r in role.find(list=True)]
+    getItems = lambda self: pos.database.session().query(Role, Role.name).all()
     newItem = lambda self: role.add(**self.data)
     updateItem = lambda self, r: r.update(**self.data)
-    canEditItem = lambda self, r: user.current.data['role'] != r
-    canDeleteItem = lambda self, r: user.find(role=r) is None
+    canEditItem = lambda self, r: user.current.role != r
+    canDeleteItem = lambda self, r: len(r.users) == 0
     
     def fillData(self):
-        self.getField('permissions').Set(map(lambda p: p.data['name'], permission.find(list=True)))
+        session = pos.database.session()
+        permission_names = session.query(Permission.name).all()
+        self.getField('permissions').Set([p[0] for p in permission_names])
         r = self.getCurrentItem()
         if r is None: return
         self.getField('name').Enable(False)
-        self.data = r.data.copy()
+        r.fillDict(self.data)
 
 class DataValidator(wx.PyValidator):
     def __init__(self, panel, key):
@@ -61,10 +63,7 @@ class DataValidator(wx.PyValidator):
             if self.key == 'name':
                 win.SetValue(data)
             elif self.key == 'permissions':
-                checked_indices = []
-                for p in data:
-                    index = win.FindString(p.data['name'])
-                    checked_indices.append(index)
+                checked_indices = [win.FindString(p.name) for p in data]
                 for i in range(win.GetCount()):
                     win.Check(i, i in checked_indices)
         except:
@@ -89,5 +88,6 @@ class DataValidator(wx.PyValidator):
         if self.key == 'name':
             data = win.GetValue()
         elif self.key == 'permissions':
-            data = map(lambda pname: permission.find(name=pname), win.CheckedStrings)
+            session = pos.database.session()
+            data = session.query(Permission).filter(Permission.name.in_(win.CheckedStrings)).all()
         return data

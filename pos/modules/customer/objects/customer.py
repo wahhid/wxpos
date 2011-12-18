@@ -1,127 +1,66 @@
 import pos
 
+import pos.database
 import pos.modules.base.objects.common as common
 
-import pos.modules.currency.objects.currency as currency
+from pos.modules.currency.objects import currency
 
-import pos.modules.customer.objects.customergroup as customergroup
+from pos.modules.currency.objects.currency import Currency
+from pos.modules.sales.objects.ticketline import TicketLine
+from pos.modules.sales.objects.ticket import Ticket
 
-class Customer(common.Item):
-    data_keys = ('name', 'code', 'first_name', 'last_name',
-                 'max_debt', 'comment', 'groups')
-    
-    def getData(self):
-        sql = "SELECT name, code, first_name, last_name, max_debt, comment"+\
-                " FROM customers WHERE id=%s AND state>0"
-        params = (self.id,)
-        cursor, success = pos.db.query(sql, params)
-        if success:
-            results = cursor.fetchone()
-            if len(results)>0:
-                self.data['name'], self.data['code'], \
-                    self.data['first_name'], self.data['last_name'], \
-                    self.data['max_debt'], self.data['comment'] = results
+from sqlalchemy import func, Table, Column, Integer, String, Float, Boolean, MetaData, ForeignKey
+from sqlalchemy.orm import relationship, backref
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method, Comparator
 
-        sql = "SELECT group_id FROM customer_group WHERE customer_id=%s"
-        params = (self.id,)
-        cursor, success = pos.db.query(sql, params)
-        if success:
-            results = cursor.fetchall()
-            group_ids = map(lambda r: r[0], results)
+customer_group_link = Table('customer_group', pos.database.Base.metadata,
+    Column('customer_id', Integer, ForeignKey('customers.id')),
+    Column('group_id', Integer, ForeignKey('customergroups.id'))
+)
 
-        self.data['groups'] = map(lambda _id: customergroup.find(_id=_id), group_ids)
+class Customer(pos.database.Base, common.Item):
+    __tablename__ = 'customers'
 
-    def getDebt(self):
-        import pos.modules.sales.objects.ticket as ticket
-        import pos.modules.sales.objects.ticketline as ticketline
-        tickets = ticket.find(list=True, customer=self, payment_method='debt', date_paid=None)
-        self.data['debt'] = 0
-        for t in tickets:
-            tls = ticketline.find(list=True, ticket=t)
-            for tl in tls:
-                self.data['debt'] += tl.data['amount']*(currency.convert(tl.data['sell_price'], t.data['currency'], currency.default))
-        return self.data['debt']
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False, unique=True)
+    code = Column(String(255), nullable=True, unique=True)
+    first_name = Column(String(255), nullable=True)
+    last_name = Column(String(255), nullable=True)
+    max_debt = Column(Float, nullable=True)
+    currency_id = Column(Integer, ForeignKey('currencies.id'))
+    comment = Column(String(255), nullable=True)
 
-class CustomerObject(common.Object):
-    item = Customer
-    def dbGetAll(self):
-        sql = "SELECT id FROM customers WHERE state>0"
-        params = None
-        cursor, success = pos.db.query(sql, params)
-        if success:
-            results = cursor.fetchall()
-            return map(lambda r: r[0], results)
-        else:
-            return None
-    
-    def dbInsert(self, name, code, first_name, last_name,
-                            max_debt, comment, group_ids):
-        sql = """INSERT INTO customers
-            (name, code, first_name, last_name, max_debt, comment)
-        VALUES (%s, %s, %s, %s, %s, %s)
-"""
-        params = (name, code, first_name, last_name, max_debt, comment)
-        cursor, success = pos.db.query(sql, params)
-        if success:
-            _id = pos.db.conn.insert_id()
-        else:
-            return None
+    groups = relationship("CustomerGroup", secondary=customer_group_link, backref="customers")
+    currency = relationship("Currency", backref="customers")
 
-        if len(group_ids)>0:
-            sql2 = "INSERT INTO customer_group (customer_id, group_id) VALUES (%s, %s)"
-            params2 = [(_id, cg_id) for cg_id in group_ids]
-            cursor2, success2 = pos.db.query(sql2, params2, many=True)
-            if success2 and cursor2.rowcount > 0:
-                return _id
-            else:
-                return None
+    keys = ('name', 'code', 'first_name', 'last_name',
+                 'max_debt', 'currency', 'comment', 'groups')
 
-    def dbUpdate(self, _id, **kwargs):
-        fields = ('name', 'code', 'first_name', 'last_name', 'max_debt', 'comment')
-        update_str = ",".join([f+"=%s" for f in fields if kwargs.has_key(f)])
-        update_params = [kwargs[f] for f in fields if kwargs.has_key(f)]
-        if len(update_str) > 0:
-            sql = "UPDATE customers SET "+update_str+" WHERE id=%s AND state>0"
-            params = update_params+[_id]
-            cursor, success = pos.db.query(sql, params)
+    def __init__(self, name, code, first_name, last_name, max_debt, currency, comment, groups):
+        self.name = name
+        self.code = code
+        self.first_name = first_name
+        self.last_name = last_name
+        self.max_debt = max_debt
+        self.currency = currency
+        self.comment = comment
+        self.groups = groups
 
-            if not success:
-                return None
+    def __repr__(self):
+        return "<Customer %s>" % (self.name)
 
-        if kwargs.has_key('group_ids'):
-            sql = "DELETE FROM customer_group WHERE customer_id=%s"
-            params = (_id,)
-            cursor, success = pos.db.query(sql, params)
-            if not success:
-                return None
-            
-            if len(kwargs['group_ids'])>0:
-                sql2 = "INSERT INTO customer_group (customer_id, group_id) VALUES (%s, %s)"
-                params2 = [(_id, cg_id) for cg_id in kwargs['group_ids']]
-                cursor2, success2 = pos.db.query(sql2, params2, many=True)
-                if success2:
-                    return cursor2.rowcount > 0
-                else:
-                    return None
-        else:
-            return True
-    
-    def dbDelete(self, _id):
-        sql = "UPDATE customers SET state=-1 WHERE id=%s"
-        params = (_id,)
-        cursor, success = pos.db.query(sql, params)
-        if success:
-            return (cursor.rowcount == 1)
-        else:
-            return None
+    @hybrid_property
+    def debt(self):
+        session = pos.database.session()
+        qry = session.query(func.sum(TicketLine.amount*TicketLine.sell_price), Currency) \
+                             .filter((TicketLine.ticket_id == Ticket.id) & \
+                                     (Ticket.customer == self) & \
+                                     (Ticket.currency_id == Currency.id) & \
+                                     (Ticket.payment_method == 'debt') & \
+                                     ~Ticket.paid) \
+                            .group_by(Ticket.currency_id)
+        total = sum(currency.convert(c_total, c, self.currency) for c_total, c in qry.all())
+        return total
 
-    def getDBData(self, key, val):
-        if key == 'groups':
-            return 'group_ids', map(lambda cg: cg.id, val)
-        else:
-            return key, val
-
-obj = CustomerObject()
-
-find = lambda _id=None, list=False, **kwargs: obj.find(list, _id, **kwargs)
-add = lambda **kwargs: obj.add(**kwargs)
+find = common.find(Customer)
+add = common.add(Customer)

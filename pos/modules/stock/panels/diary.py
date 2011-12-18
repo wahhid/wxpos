@@ -1,11 +1,6 @@
 import wx
 
-from pos.modules.base.objects.idManager import ids
-
-import pos.modules.currency.objects.currency as currency
-
-import pos.modules.stock.objects.product as product
-import pos.modules.stock.objects.category as category
+import pos
 
 from pos.modules.stock.windows.productCatalogList import ProductCatalogList
 
@@ -34,7 +29,7 @@ class StockDiaryPanel(wx.Panel):
         self.SetSizer(self.formSizer)
     
     def __init__(self, parent):
-        wx.Panel.__init__(self, id=ids['stockDiaryPanel'], parent=parent, style=wx.TAB_TRAVERSAL)
+        wx.Panel.__init__(self, parent, -1, style=wx.TAB_TRAVERSAL)
         
         self.catalogList = ProductCatalogList(self, show_only_in_stock=True)
         self.catalogList.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnCatalogItemSelect)
@@ -43,6 +38,7 @@ class StockDiaryPanel(wx.Panel):
 
         box_choices = ['In', 'Modification']
         self.operationBox = wx.RadioBox(self, -1, label="Operation", choices=box_choices)
+        self.operationBox.Bind(wx.EVT_RADIOBOX, self.OnOperationRadio)
 
         self.quantityLbl = wx.StaticText(self, -1, label='Quantity')
         self.quantitySpin = wx.SpinCtrl(self, -1, value='0', style=wx.SP_ARROW_KEYS, min=0)
@@ -63,14 +59,7 @@ class StockDiaryPanel(wx.Panel):
         self.enableForm(False)
 
     def canEdit(self):
-        if self.product is None:
-            return False
-        else:
-            quantity = self.product.data['quantity']
-            if quantity is None:
-                return False
-            else:
-                return True
+        return (self.product is not None and self.product.in_stock)
 
     def enableForm(self, en):
         self.catalogList.Enable(not en)
@@ -80,9 +69,9 @@ class StockDiaryPanel(wx.Panel):
         self.cancelBtn.Enable(en)
 
         if self.canEdit() and not en:
-            quantity = self.product.data['quantity']
             self.editBtn.Enable(True)
-            self.quantitySpin.SetValue(quantity)
+            self.operationBox.SetSelection(0)
+            self.quantitySpin.SetValue(0)
         elif en:
             self.editBtn.Enable(False)
         else:
@@ -92,13 +81,25 @@ class StockDiaryPanel(wx.Panel):
     def saveChanges(self):
         quantity = self.quantitySpin.GetValue()
         operation = 'in' if self.operationBox.GetSelection() == 0 else 'edit'
-        success = self.product.updateQuantity(quantity, operation)
+        if operation == 'in':
+            self.product.quantity_in(quantity)
+        else:
+            self.product.quantity = quantity
+        success = True
         if not success:
             wx.MessageBox('An error occured while saving changes.', 'Error',
                           wx.OK | wx.ICON_ERROR)
             return False
         else:
             return True
+
+    def OnOperationRadio(self, event):
+        event.Skip()
+        operation = 'in' if self.operationBox.GetSelection() == 0 else 'edit'
+        if operation == 'in':
+            self.quantitySpin.SetValue(0)
+        else:
+            self.quantitySpin.SetValue(self.product.quantity)
 
     def OnEditButton(self, event):
         event.Skip()

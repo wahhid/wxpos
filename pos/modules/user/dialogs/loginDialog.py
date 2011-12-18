@@ -1,13 +1,14 @@
 import wx
 
-from pos.modules.base.objects.idManager import ids
+import pos
 
 import pos.modules.user.objects.user as user
-from pos.modules.user.windows.userCatalogList import UserCatalogList
+
+from pos.modules.user.windows import UserCatalogList
 
 class LoginDialog(wx.Dialog):
     def __init_ctrls(self):
-        self.panel = wx.Panel(self, ids['loginPanel'])
+        self.panel = wx.Panel(self, -1)
 
         # User
         self.userLbl = wx.StaticText(self.panel, -1, label='User')
@@ -48,8 +49,7 @@ class LoginDialog(wx.Dialog):
         self.SetSizer(self.mainSizer)
     
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, ids['loginDialog'],
-              size=wx.Size(400, 500), title='Login')
+        wx.Dialog.__init__(self, parent, -1, size=wx.Size(400, 500), title='Login')
 
         self.__init_ctrls()
         self.__init_sizers()

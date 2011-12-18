@@ -1,15 +1,14 @@
 import wx
 
-from pos.modules.base.objects.idManager import ids
+import pos
 
-import pos.modules.currency.objects.currency as currency
+from pos.modules.currency.objects.currency import Currency
 
 from pos.modules.base.panels import ManagePanel
 
 class CurrenciesPanel(wx.Panel, ManagePanel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, ids['currenciesPanel'],
-                style=wx.TAB_TRAVERSAL)
+        wx.Panel.__init__(self, parent, -1, style=wx.TAB_TRAVERSAL)
         
         self._init_panel('Currencies', DataValidator)
         self.createField('Name', wx.TextCtrl, 'name', '')
@@ -19,16 +18,16 @@ class CurrenciesPanel(wx.Panel, ManagePanel):
         self.createField('Digit Grouping', wx.CheckBox, 'digit_grouping', True)
         self._init_fields()
 
-    getItems = lambda self: [[c, c.data['name']] for c in currency.find(list=True)]
+    getItems = lambda self: pos.database.session().query(Currency, Currency.name).all()
     newItem = lambda self: currency.add(**self.data)
     updateItem = lambda self, c: c.update(**self.data)
     canEditItem = lambda self, c: True
-    canDeleteItem = lambda self, c: False
+    canDeleteItem = lambda self, c: True
     
     def fillData(self):
         c = self.getCurrentItem()
         if c is None: return
-        self.data = c.data.copy()
+        c.fillDict(self.data)
     
 class DataValidator(wx.PyValidator):
     def __init__(self, panel, key):

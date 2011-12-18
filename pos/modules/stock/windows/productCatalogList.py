@@ -1,5 +1,7 @@
-import pos.modules.stock.objects.category as category
-import pos.modules.stock.objects.product as product
+import pos
+
+from pos.modules.stock.objects.category import Category
+from pos.modules.stock.objects.product import Product
 
 from pos.modules.base.windows.catalogList import CatalogList
 
@@ -9,16 +11,13 @@ class ProductCatalogList(CatalogList):
         self.show_only_in_stock = show_only_in_stock
     
     def getAll(self):
+        session = pos.database.session()
         if self.show_only_in_stock:
-            products = product.find(list=True, in_stock=True)
+            return session.query(Product, Product.name).filter(Product.in_stock).all()
         else:
-            products = product.find(list=True)
-        files = map(lambda p: (p, p.data['name']), products)
-        return files
+            return session.query(Product, Product.name).all()
     
     def getChildren(self, parent):
-        children_categories = category.find(list=True, parent_category=parent)
-        children_products = product.find(list=True, category=parent)
-
-        return [map(lambda c: (c, c.data['name']), children_categories),
-                map(lambda p: (p, p.data['name']), children_products)]
+        session = pos.database.session()
+        return [session.query(Category, Category.name).filter(Category.parent == parent).all(),
+                session.query(Product, Product.name).filter(Product.category == parent).all()]

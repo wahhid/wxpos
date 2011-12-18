@@ -1,17 +1,16 @@
 import wx
 
-from pos.modules.base.objects.idManager import ids
+import pos
 
-import pos.modules.user.objects.user as user
-import pos.modules.user.objects.role as role
 import pos.modules.user.objects.permission as permission
+from pos.modules.user.objects.permission import Permission
+from pos.modules.user.objects.role import Role
 
 from pos.modules.base.panels import ManagePanel
 
 class PermissionsPanel(wx.Panel, ManagePanel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, ids['permissionsPanel'],
-                style=wx.TAB_TRAVERSAL)
+        wx.Panel.__init__(self, parent, -1, style=wx.TAB_TRAVERSAL)
         
         self._init_panel('Permissions', DataValidator)
         self.createField('Name', wx.TextCtrl, 'name', '')
@@ -19,20 +18,17 @@ class PermissionsPanel(wx.Panel, ManagePanel):
                          style=wx.TE_MULTILINE)
         self._init_fields()
 
-    getItems = lambda self: [[p, p.data['name']] for p in permission.find(list=True)]
+    getItems = lambda self: pos.database.session().query(Permission, Permission.name).all()
     newItem = lambda self: permission.add(**self.data)
     updateItem = lambda self, p: p.update(**self.data)
     canEditItem = lambda self, p: True
-    def canDeleteItem(self, p):
-        roles = role.find(list=True)
-        roles = filter(lambda r: r.isPermitted(p), roles)
-        return len(roles) == 0
+    canDeleteItem = lambda self, p: len(p.roles) == 0
     
     def fillData(self):
         p = self.getCurrentItem()
         if p is None: return
         self.getField('name').Enable(False)
-        self.data = p.data.copy()
+        p.fillDict(self.data)
 
 class DataValidator(wx.PyValidator):
     def __init__(self, panel, key):

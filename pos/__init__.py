@@ -1,2 +1,4 @@
-db = None
-user = None
+import ConfigParser
+
+config = ConfigParser.SafeConfigParser()
+config.read('wxpos.cfg')

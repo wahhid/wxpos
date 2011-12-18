@@ -1,8 +1,8 @@
 import wx
 
-import pos.modules.sales.objects.ticket as ticket
+import pos
 
-from pos.modules.base.objects.idManager import ids
+from pos.modules.sales.objects.ticket import Ticket
 
 class TicketChoice(wx.Choice):
     def __init__(self, parent):
@@ -26,7 +26,8 @@ class TicketChoice(wx.Choice):
     def updateList(self):
         choices = []
         self.__tickets = {}
-        ts = ticket.find(list=True, closed=False)
+        session = pos.database.session()
+        ts = session.query(Ticket).filter(~Ticket.closed).all()
         for t in ts:
             ch = self.getTicketLabel(t)
             self.__tickets[ch] = t

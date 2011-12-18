@@ -1,134 +1,74 @@
+import pos.database
+import warnings
 
-class Object:
-    item = None
-    all_items = None
+#from sqlalchemy import func, Table, Column, Integer, String, Float, Boolean, Enum, DateTime, MetaData, ForeignKey
+#from sqlalchemy.orm import relationship, backref
 
-    def getAll(self, refresh=False):
-        if refresh or self.all_items is None:
-            item_ids = self.dbGetAll()
-            if self.all_items is not None:
-                old_items_dict = dict(map(lambda item: (item.id, item), self.all_items))
-                deleted_item_ids = filter(lambda _id: _id not in item_ids, old_items_dict.keys())
-                for _id in deleted_item_ids:
-                    self.all_items.remove(self.find(_id=_id))
-                for _id in item_ids:
-                    if _id in old_items_dict.keys():
-                        item = old_items_dict[_id]
-                        item.getData()
-                    else:
-                        self.all_items.append(self.item(_id, self))
+class Item:
+
+    # TODO arrange soft deletions to have 3 tables (or more) one mother(id only), one active children, one deleted children
+    #        see bookmark "The trouble with soft delete"
+    #date_deleted = Column(DateTime, nullable=True, default=None)
+    
+    # TODO I thought the keys dict in every Item subclass made sense but it is useless
+    #        should make sure before removing it from everywhere
+    def fillDict(self, D):
+        for k in D.keys():
+            D[k] = getattr(self, k)
+
+    def update(self, **kwargs):
+        session = pos.database.session()
+        for k, v in kwargs.iteritems():
+            setattr(self, k, v)
+        session.commit()
+        return True
+
+    def delete(self):
+        session = pos.database.session()
+        session.delete(self)
+        # TODO check the soft delete thingy
+        #session.date_deleted = func.now()
+        session.commit()
+        return True
+
+class find:
+    def __init__(self, item):
+        self.item = item
+
+    def find(self, _id=None, list=False, **kwargs):
+        # TODO remove that function from here
+        raise Exception, 'object.find() should not be used anymore'
+        session = pos.database.session()
+        if _id is not None:
+            # result = [session.query(self.item).filter_by(date_deleted=None, id=_id).one()]
+            result = [session.query(self.item).filter_by(id=_id).one()]
+        else:
+            # result = session.query(self.item).filter_by(date_deleted=None, **kwargs).all()
+            if 'closed' in kwargs:
+                result = [r for r in session.query(self.item).all() if len([k for k in kwargs if getattr(r, k) != kwargs[k]]) == 0]
+                print result
             else:
-                self.all_items = map(lambda _id: self.item(_id, self), item_ids)
-        return self.all_items
-
-    def find(self, list=False, _id=None, **kwargs):
-        results = self.getAll()
-        if _id is not None or len(kwargs)>0:
-            matches = []
-            if _id is not None:
-                matches.append(lambda i: (i.id == _id))
-            for key, val in kwargs.iteritems():
-                matches.append(lambda i, k=key, v=val: (i.data[k] == v))
-            def global_filter(i, ms=matches):
-                for m in ms:
-                    if not m(i):
-                        return False
-                return True
-            results = filter(global_filter, results)
-
-        count = len(results)
+                result = session.query(self.item).filter_by(**kwargs).all()
+        
+        count = len(result)
         if list or count>1:
-            return [r for r in results]
+            return result
         elif count == 0:
             return None
         elif count == 1:
-            return results[0]
+            return result[0]
+    
+    __call__ = find
+
+class add:
+    def __init__(self, item):
+        self.item = item
 
     def add(self, **kwargs):
-        args_items = filter(lambda (k, v): k in self.item.data_keys, kwargs.items())
-        args = dict(args_items)
-        data_items = map(lambda (k, v): self.getDBData(k, v), args_items)
-        data = dict(data_items)
-        _id = self.dbInsert(**data)
-        if _id:
-            i = self.item(_id, self)
-            i.data.update(args)
-            self.getAll(refresh=True)
-            return i
-        else:
-            return None
+        i = self.item(**kwargs)
+        session = pos.database.session()
+        session.add(i)
+        session.commit()
+        return i
 
-    def getDBData(self, key, val):
-        return val
-
-class DataDict(dict):
-    def __init__(self, item):
-        dict.__init__(self)
-        self.item = item
-        self.keys = item.data_keys
-    
-    def __missing__(self, key):
-        if key not in self.keys:
-            raise KeyError, 'No data key %s' % (key,)
-        else:
-            self.item.getData()
-            if not self.has_key(key):
-                raise KeyError, 'No data key %s' % (key,)
-            else:
-                return self[key]
-
-    def copy(self):
-        if len(self) == 0:
-            self.item.getData()
-        return dict.copy(self)
-
-class Item:
-    data_keys = tuple()
-
-    def getData(self):
-        pass
-
-    def __init__(self, _id, obj):
-        self.id = _id
-        self.obj = obj
-        self.data = DataDict(self)
-
-    def __eq__(self, el):
-        try:
-            return type(self) == type(el) and self.id == el.id
-        except AttributeError:
-            return False
-    
-    def __ne__(self, el):
-        try:
-            return type(self) != type(el) or self.id != el.id
-        except AttributeError:
-            return False
-
-    def __repr__(self):
-        return '<%s id=%s>' % (self.__class__.__name__, self.id)
-
-    def update(self, **kwargs):
-        args_items = filter(lambda (k, v): k in self.data_keys, kwargs.items())
-        args = dict(args_items)
-        data_items = map(lambda (k, v): self.obj.getDBData(k, v), args_items)
-        data = dict(data_items)
-        success = self.obj.dbUpdate(self.id, **data)
-        if success:
-            self.data.update(args)
-            self.obj.getAll(refresh=True)
-            return True
-        else:
-            return False
-
-    def delete(self):
-        success = self.obj.dbDelete(self.id)
-        if success:
-            self.obj.getAll(refresh=True)
-            return True
-        else:
-            return False
-
-    def get(self, key):
-        self.getData()
-        return self.data[key]
+    __call__ = add

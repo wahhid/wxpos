@@ -1,10 +1,10 @@
 import wx
 
-from pos.modules.user.windows.userCatalogList import UserCatalogList
+from pos.modules.user.windows import UserCatalogList
 
 from .pdf import PDFReportPanel
 import pos.modules.report.objects.users as users_report
-from pos.modules.report.dialogs.customerFilterDialog import CustomerFilterDialog
+from pos.modules.report.dialogs import CustomerFilterDialog
 
 class UsersReportPanel(PDFReportPanel):
     def __init__(self, parent):

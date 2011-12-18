@@ -2,101 +2,62 @@ import pos
 
 import pos.modules.base.objects.common as common
 
-import pos.modules.user.objects.role as role
+from sqlalchemy import func, Table, Column, Integer, String, Float, Boolean, MetaData, ForeignKey
+from sqlalchemy.orm import relationship, backref
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method, Comparator
 
-class User(common.Item):
-    data_keys = ('username', 'password', 'role')
-    
-    def __init__(self, _id, obj):
-        common.Item.__init__(self, _id, obj)
-        self.__logged_in = False
-    
-    def getData(self):
-        sql = "SELECT username, role_id FROM users WHERE state>0 AND id=%s"
-        params = (self.id,)
-        cursor, success = pos.db.query(sql, params)
-        if success:
-            results = cursor.fetchall()
-            if len(results)>0:
-                self.data['username'], role_id = results[0]
-                self.data['role'] = role.find(_id=role_id)
+from md5 import md5
+
+def encode(password):
+    return md5(password).hexdigest()
+
+class User(pos.database.Base, common.Item):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String(255), nullable=False, unique=True)
+    encoded_password = Column('password', String(32), nullable=False)
+    role_id = Column(Integer, ForeignKey('roles.id'))
+
+    role = relationship('Role', order_by="Role.id", backref="users")
+
+    keys = ('username', 'password', 'role')
+
+    def __init__(self, username, password, role):
+        self.username = username
+        #self._real_password = password
+        self.encoded_password = encode(password)
+        self.role = role
+
+    @hybrid_property
+    def password(self):
+        return self.encoded_password
+
+    @password.setter
+    def password(self, value):
+        #self._real_password = value
+        self.encoded_password = encode(value)
 
     def login(self, password):
-        if self.isLoggedIn():
-            return True
-        sql = "SELECT COUNT(id) FROM users WHERE state>0 AND id=%s AND password=MD5(%s)"
-        params = (self.id, password)
-        cursor, success = pos.db.query(sql, params)
-        if success:
-            results = cursor.fetchone()
-            self.__logged_in = (results[0] == 1)
-        else:
-            self.__logged_in = False
-        return self.__logged_in
+        return self.encoded_password == encode(password)
 
-    def isLoggedIn(self):
-        return bool(self.__logged_in)
+#    @password.expression
+#    def password(cls):
+#        return func.md5(cls._real_password)
 
-class UserObject(common.Object):
-    item = User
-    def dbGetAll(self):
-        sql = "SELECT id FROM users WHERE state>0"
-        params = None
-        cursor, success = pos.db.query(sql, params)
-        if success:
-            results = cursor.fetchall()
-            return map(lambda r: r[0], results)
-        else:
-            return None
-    
-    def dbInsert(self, username, password, role_id):
-        sql = "INSERT INTO users (username, password, role_id) VALUES (%s, MD5(%s), %s)"
-        params = (username, password, role_id)
-        cursor, success = pos.db.query(sql, params)
-        if success:
-            _id = pos.db.conn.insert_id()
-            return _id
-        else:
-            return None
-    
-    def dbUpdate(self, _id, **kwargs):
-        update = []
-        update_params = []
-        if 'password' in kwargs:
-            update.append("password=MD5(%s)")
-            update_params.append(kwargs['password'])
-        if 'role_id' in kwargs:
-            update.append("role_id=%s")
-            update_params.append(kwargs['role_id'])
-        if len(update) == 0: return True
-        update_str = ",".join(update)
-        
-        sql = "UPDATE users SET "+update_str+" WHERE id=%s AND state>0"
-        params = update_params+[_id]
-        cursor, success = pos.db.query(sql, params)
-        if success:
-            return True
-        else:
-            return None
-    
-    def dbDelete(self, _id):
-        sql = "UPDATE users SET state=-1 WHERE id=%s"
-        params = (_id,)
-        cursor, success = pos.db.query(sql, params)
-        if success:
-            return (cursor.rowcount == 1)
-        else:
-            return None
+#    @password.comparator
+#    def password(cls):
+#        return PasswordComparator(cls.encoded_password)
 
-    def getDBData(self, key, val):
-        if key == 'role':
-            return 'role_id', val.id
-        else:
-            return key, val
+    def __repr__(self):
+        return "<User %s>" % (self.username,)
 
-obj = UserObject()
+#class PasswordComparator(Comparator):
+#    def __eq__(self, other):
+#        #return self.__clause_element__() == func.md5(other)
+#        return self.__clause_element__() == encode(other)
 
-find = lambda _id=None, list=False, **kwargs: obj.find(list, _id, **kwargs)
-add = lambda **kwargs: obj.add(**kwargs)
+find = common.find(User)
+add = common.add(User)
 
 current = None

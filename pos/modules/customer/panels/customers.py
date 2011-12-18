@@ -1,15 +1,19 @@
 import wx
 
-from pos.modules.base.objects.idManager import ids
+import pos
 
-import pos.modules.customer.objects.customergroup as customergroup
+import pos.modules.currency.objects.currency as currency
+from pos.modules.currency.objects.currency import Currency
+
 import pos.modules.customer.objects.customer as customer
+from pos.modules.customer.objects.customer import Customer
+from pos.modules.customer.objects.customergroup import CustomerGroup
 
 from pos.modules.base.panels import ManagePanel
 
 class CustomersPanel(wx.Panel, ManagePanel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, id=ids['customersPanel'], parent=parent, style=wx.TAB_TRAVERSAL)
+        wx.Panel.__init__(self, parent, -1, style=wx.TAB_TRAVERSAL)
         
         self._init_panel('Customers', DataValidator)
         self.createField('Name', wx.TextCtrl, 'name', '')
@@ -17,22 +21,30 @@ class CustomersPanel(wx.Panel, ManagePanel):
         self.createField('First Name', wx.TextCtrl, 'first_name', None)
         self.createField('Last Name', wx.TextCtrl, 'last_name', None)
         self.createField('Max Debt', wx.TextCtrl, 'max_debt', None)
+        self.createField('Preferred Currency', wx.Choice, 'currency', currency.get_default())
         self.createField('Groups', wx.CheckListBox, 'groups', [])
         self.createField('Comment', wx.TextCtrl, 'comment', None,
                          style=wx.TE_MULTILINE)
         self._init_fields()
 
-    getItems = lambda self: [[c, c.data['name']] for c in customer.find(list=True)]
+    getItems = lambda self: pos.database.session().query(Customer, Customer.name).all()
     newItem = lambda self: customer.add(**self.data)
     updateItem = lambda self, c: c.update(**self.data)
     canEditItem = lambda self, c: True
     canDeleteItem = lambda self, c: True
     
     def fillData(self):
-        self.getField('groups').Set(map(lambda cg: cg.data['name'], customergroup.find(list=True)))
+        session = pos.database.session()
+        
+        customergroup_names = session.query(CustomerGroup.name).all()
+        self.getField('groups').Set([cg[0] for cg in customergroup_names])
+        
+        currency_choices = session.query(Currency.symbol).all()
+        self.getField('currency').SetItems([c[0] for c in currency_choices])
+        
         c = self.getCurrentItem()
         if c is None: return
-        self.data = c.data.copy()
+        c.fillDict(self.data)
 
 class DataValidator(wx.PyValidator):
     def __init__(self, panel, key):
@@ -65,10 +77,13 @@ class DataValidator(wx.PyValidator):
             elif self.key == 'groups':
                 checked_indices = []
                 for cg in data:
-                    index = win.FindString(cg.data['name'])
+                    index = win.FindString(cg.name)
                     checked_indices.append(index)
                 for i in range(win.GetCount()):
                     win.Check(i, i in checked_indices)
+            elif self.key == 'currency':
+                if data is not None:
+                    win.SetStringSelection(data.symbol)
         except:
             print '-- ERROR -- in DataValidator.TransferToWindow'
             print '--', self.key, self.panel.data
@@ -89,7 +104,12 @@ class DataValidator(wx.PyValidator):
                 if data == '':
                     data = None
             elif self.key == 'groups':
-                data = map(lambda cgname: customergroup.find(name=cgname), win.CheckedStrings)
+                session = pos.database.session()
+                data = session.query(CustomerGroup).filter(CustomerGroup.name.in_(win.CheckedStrings)).all()
+            elif self.key == 'currency':
+                currency_symbol = win.GetStringSelection()
+                session = pos.database.session()
+                data = session.query(Currency).filter_by(symbol=currency_symbol).one()
             self.panel.data[self.key] = data
         except:
             print '-- ERROR -- in DataValidator.TransferFromWindow'

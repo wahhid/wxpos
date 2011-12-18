@@ -1,6 +1,8 @@
 import wx
 
-import pos.modules.user.objects.user as user
+import pos
+
+from pos.modules.user.objects.user import User
 
 from pos.modules.base.windows.catalogList import CatalogList
 
@@ -11,9 +13,8 @@ class UserCatalogList(CatalogList):
                              show_all_item=False)
     
     def getAll(self):
-        users = user.find(list=True)
-        files = map(lambda u: (u, u.data['username']), users)
-        return files
+        session = pos.database.session()
+        return session.query(User, User.username).all()
     
     def getChildren(self, parent):
         return [[], self.getAll()]

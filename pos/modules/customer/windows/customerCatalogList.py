@@ -1,23 +1,23 @@
-import pos.modules.customer.objects.customer as customer
-import pos.modules.customer.objects.customergroup as customergroup
+import pos
+
+from pos.modules.customer.objects.customer import Customer
+from pos.modules.customer.objects.customergroup import CustomerGroup
 
 from pos.modules.base.windows.catalogList import CatalogList
 
 class CustomerCatalogList(CatalogList):
     def getAll(self):
-        customers = customer.find(list=True)
-        files = map(lambda c: (c, c.data['name']), customers)
-        return files
-        
+        session = pos.database.session()
+        return session.query(Customer, Customer.name).all()
+
     def getChildren(self, parent):
-        children_groups = customergroup.find(list=True) if parent is None else []
-        folders = map(lambda cg: (cg, cg.data['name']), children_groups)
-
+        session = pos.database.session()
+        
         if parent is None:
-            children_customers = customer.find(list=True, groups=[])
+            return [session.query(CustomerGroup, CustomerGroup.name).all(),
+                    session.query(Customer, Customer.name).filter(~Customer.groups.any()).all()]
         else:
-            customers = customer.find(list=True)
-            children_customers = filter(lambda c: parent in c.data['groups'], customers)
-        files = map(lambda c: (c, c.data['name']), children_customers)
+            return [[],
+                    session.query(Customer, Customer.name).filter(Customer.groups.contains(parent)).all()]
 
-        return [folders, files]
+        return [[(c, c.name) for c in children_customers]]

@@ -44,7 +44,7 @@ class ConfigDialog(wx.Dialog):
             configfile = open('wxpos.cfg', 'wb')
             if self.dbPanel.TransferDataFromWindow():
                 config.write(configfile)
-                self.Close()
+                event.Skip()
 
 class DatabaseConfigPanel(wx.Panel):
     def __init_ctrls(self):

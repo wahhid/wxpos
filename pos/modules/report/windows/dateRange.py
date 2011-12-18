@@ -2,8 +2,6 @@ import wx
 
 import datetime
 
-from pos.modules.base.objects.idManager import ids
-
 class DateRange(wx.PyPanel):
     def _init_sizers(self):
         self.dateSizer = wx.BoxSizer(orient=wx.HORIZONTAL)

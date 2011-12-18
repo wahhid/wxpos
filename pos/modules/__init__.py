@@ -2,83 +2,128 @@ import pos
 import imp, os, sys
 import pkgutil
 
-def loadModules():
+class ModuleWrapper:
+    def __init__(self, name, parent):
+        self.name = name
+        self.parent = parent
+        self.cfg = None
+        self.valid = None
+        self.dependencies = []
+
+    def find(self):
+        try:
+            _file, pathname, description = imp.find_module(self.name, [self.parent])
+        except ImportError as e:
+            self.valid = False
+            return None
+        else:
+            try:
+                self.cfg = imp.find_module('config', [pathname])
+            except ImportError as e:
+                self.valid = False
+                return False
+            else:
+                self.valid = True
+                return True
+        return self.valid
+
+    def load(self):
+        if not self.valid: return
+        self.top_module = imp.load_package(self.name, self.parent)
+        self.module = imp.load_module(self.name+'.config', *self.cfg)
+        self.dependencies = self.module.dependencies
+
+    def load_database_objects(self):
+        if not self.valid: return
+        try:
+            load = self.module.load_database_objects
+        except AttributeError:
+            return False
+        else:
+            load()
+            return True
+
+    def __lt__(self, mod):
+        return (self.name in mod.dependencies)
+
+def init():
+    global modules
     print '*Loading modules...'
-    #import pos.modules
-    #modules_path = pos.modules.__path__[0]
     modules_path = os.path.dirname(__file__)
     packages = [p for p in pkgutil.walk_packages([modules_path])]
 
     modules = []
-    for pkg in packages:
-        if pkg[1].startswith('.'):
-            print '*Ignored module', pkg[1]
-            continue
-        if hasattr(sys, 'frozen') and sys.frozen:
+    if hasattr(sys, 'frozen') and sys.frozen:
+        for pkg in packages:
+            # TODO
             try:
                 module = pkg[0].load_module(pkg[1])
             except ImportError:
-                print '*Invalid module', name
-            else:
-                modules.append(module)
-        else:
-            sys.path.insert(0, modules_path)
-            try:
-                _file, pathname, description = imp.find_module(pkg[1])
-            except ImportError:
                 print '*Invalid module', pkg[1]
             else:
-                module = imp.load_package(pkg[1], pathname)
                 modules.append(module)
-            sys.path.remove(modules_path)
-    modules.sort(cmp=dependencyCmp)
-    print '*(%d) modules found: %s' % (len(modules), ', '.join([m.__name__ for m in modules]))
-    return modules
+    else:
+        for pkg in packages:
+            if pkg[1].startswith('_'):
+                print '*Ignored module', pkg[1]
+                continue
+            mod = ModuleWrapper(pkg[1], modules_path)
+            find = mod.find()
+            if find is None:
+                print '*Invalid module', mod.name
+            elif not find:
+                print '*No config module for', mod.name
+            else:
+                mod.load()
+            print '*Loading DB Objects', mod.name
+            if not mod.load_database_objects():
+                print '*DB Objects missing'
+            if mod.valid:
+                modules.append(mod)
+    print '*(%d) modules found: %s' % (len(modules), ', '.join([m.name for m in modules]))
+    checkDependencies()
+    modules.sort()
 
 def checkDependencies():
     print '*Checking module dependencies...'
-    module_names = map(lambda m: m.__name__, modules)
-    for top in modules:
-        missing = filter(lambda dep: dep not in module_names, top.dependencies)
+    module_names = [mod.name for mod in modules]
+    for mod in modules:
+        missing = [mod_name for mod_name in mod.dependencies if mod_name not in module_names]
         if len(missing)>0:
-            print '*** Missing dependencies for module', top.__name__, ':', ' '.join(missing)
+            print '*** Missing dependencies for module', mod.name, ':', ' '.join(missing)
             raise Exception, 'Missing dependency'
 
-def dependencyCmp(m1, m2):
-    if m1.__name__ in m2.dependencies and m2.__name__ in m1.dependencies:
-        return 0
-    elif m2.__name__ in m1.dependencies:
-        return 1
-    elif m1.__name__ in m2.dependencies:
-        return -1
-    else:
-        return 0
-
 def isInstalled(module_name):
-    return (module_name in [top.__name__ for top in modules])
+    return (module_name in [mod.name for mod in modules])
 
-modules = loadModules()
-checkDependencies()
+# DATABASE EXTENSION
 
-def configDB(test):
+def configDB():
     print '*Clearing database...'
-    pos.db.clear()
-    for top in modules:
+    pos.database.clear()
+    print '*Re-creating database'
+    pos.database.create()
+
+def configTestDB():
+    print '*Adding test values to database...'
+    for mod in modules:
         try:
-            config = top.configDB
+            test = mod.module.test_database_values
         except AttributeError:
-            print '*DB Config missing', top.__name__
+            print '*DB Test Config missing', mod.name
         else:
-            print '*Configuring', top.__name__
-            config(test)
+            print '*Adding Test Values', mod.name
+            test()
+
+# MENU EXTENSION
 
 def extendMenu(menu):
     items = []
-    for top in modules:
+    for mod in modules:
         try:
-            item = top.ModuleMenu
+            item = mod.module.ModuleMenu
         except AttributeError:
-            print '*Menu Extension missing', top.__name__
+            print '*Menu Extension missing', mod.name
         else:
             items.append(item(menu))
 

@@ -1,4 +1,3 @@
-import wx
 import datetime
 
 from .pdf import PDFReportPanel

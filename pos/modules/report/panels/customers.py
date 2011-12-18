@@ -4,7 +4,7 @@ from pos.modules.customer.windows.customerCatalogList import CustomerCatalogList
 
 from .pdf import PDFReportPanel
 import pos.modules.report.objects.customers as customers_report
-from pos.modules.report.dialogs.customerFilterDialog import CustomerFilterDialog
+from pos.modules.report.dialogs import CustomerFilterDialog
 
 class CustomersReportPanel(PDFReportPanel):
     def __init__(self, parent):
@@ -36,9 +36,9 @@ class CustomersReportPanel(PDFReportPanel):
         for i, s in enumerate(show):
             si += s*2**i
         if to_date is None:
-            return 'customer-%s-%s-%d' % (customer.data['name'], from_date, si)
+            return 'customer-%s-%s-%d' % (customer.name, from_date, si)
         else:
-            return 'customer-%s-%s-%s-%d' % (customer.data['name'], from_date, to_date, si)
+            return 'customer-%s-%s-%s-%d' % (customer.name, from_date, to_date, si)
 
     def generateReport(self, filename, from_date, to_date, customer,
                        show_cash, show_cheque, show_card, show_debt, show_free,

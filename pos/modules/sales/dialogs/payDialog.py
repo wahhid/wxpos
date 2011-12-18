@@ -1,10 +1,6 @@
 import wx
 
-import pos.modules.currency.objects.currency as currency
-
-import pos.modules.sales.objects.ticketline as ticketline
-
-from pos.modules.base.objects.idManager import ids
+import warnings
 
 import pos.menu
 
@@ -16,7 +12,9 @@ class PayDialog(wx.Dialog):
         self.separationLine = wx.StaticLine(self, -1)
 
         self.mainToolbook = wx.Toolbook(self, -1, style=wx.BK_LEFT)
-        ## TEST TODO
+
+        # TODO PayDialog is using pos.menu.il (a wx.ImageList)
+        warnings.warn('PayDialog is using pos.menu.il (a wx.ImageList)', stacklevel=1)
         self.mainToolbook.AssignImageList(pos.menu.il)
 
         toolbar = self.mainToolbook.GetToolBar()
@@ -61,7 +59,7 @@ class PayDialog(wx.Dialog):
         self.SetSizer(self.mainSizer)
     
     def __init__(self, parent, total, _currency, _customer, disabled=[]):
-        wx.Dialog.__init__(self, parent, ids['editTicketlineDialog'],
+        wx.Dialog.__init__(self, parent, -1,
               size=wx.Size(400, 500), title='Pay ticket')
 
         self.total = total
@@ -386,8 +384,8 @@ class DebtPanel(wx.Panel):
 
         c = self.dialog.customer
         if c is not None:
-            self.nameTxt.SetValue(c.data['name'])
-            self.maxDebtTxt.SetValue(str(c.data['max_debt']))
+            self.nameTxt.SetValue(c.name)
+            self.maxDebtTxt.SetValue(str(c.max_debt))
 
     def IsAllowed(self):
         return self.dialog.customer is not None
