@@ -35,13 +35,12 @@ class Currency(pos.database.Base, common.Item):
     def format(self, value):
         return '%s %s' % (format(round(value, max(0, self.decimal_places)), self.getFormatString()), self.symbol)
 
-find = common.find(Currency)
 add = common.add(Currency)
 
 def get_default():
     # TODO integrate it with a system that allows the user to change the default currency
     session = pos.database.session()
-    return session.query(Currency).filter(Currency.id == 1).one()
+    return session.query(Currency).first()
 
 def convert(price, src_currency, dest_currency):
     s_val = float(src_currency.value)

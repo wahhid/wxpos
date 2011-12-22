@@ -4,12 +4,7 @@ import pos
 
 import pos.menu
 
-from pos.modules.base.objects.idManager import ids
-
 import pos.modules
-if pos.modules.isInstalled('user'):
-    import pos.modules.user.objects.user as user
-    from pos.modules.user.objects.permission import Permission
 
 class AppFrame(wx.Frame):
     def _init_sizers(self):
@@ -23,13 +18,6 @@ class AppFrame(wx.Frame):
     def __init__(self, parent):
         wx.Frame.__init__(self, parent, -1,
                 size=wx.Size(800, 600), title='App Frame')
-
-        accTable = wx.AcceleratorTable([
-            (wx.ACCEL_CTRL, wx.WXK_TAB, ids['CtrlTab']),
-            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, wx.WXK_TAB, ids['CtrlShiftTab'])])
-        self.Bind(wx.EVT_MENU, self.OnCtrlTabCommand, id=ids['CtrlTab'])
-        self.Bind(wx.EVT_MENU, self.OnCtrlShiftTabCommand, id=ids['CtrlShiftTab']) 
-        self.SetAcceleratorTable(accTable)
         
         self._init_main()
         self._init_sizers()
@@ -37,12 +25,14 @@ class AppFrame(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
     def OnCtrlTabCommand(self, event):
+        """ Not used anymore. Was used with accelerator tables."""
         event.Skip()
         sel = self.mainToolbook.GetSelection()
         pages = self.mainToolbook.GetPageCount()
         self.mainToolbook.ChangeSelection((sel+1)%pages)
 
     def OnCtrlShiftTabCommand(self, event):
+        """ Not used anymore. Was used with accelerator tables."""
         event.Skip()
         sel = self.mainToolbook.GetSelection()
         pages = self.mainToolbook.GetPageCount()
@@ -54,19 +44,16 @@ class AppFrame(wx.Frame):
     
     def loadMenu(self):
         self.mainToolbook.AssignImageList(pos.menu.il)
+        # TODO arrange that, change the whole permission system
         if pos.modules.isInstalled('user'):
+            import pos.modules.user.objects.user as user
             for item in pos.menu.getItems():
                 current_role = user.current.role
                 session = pos.database.session()
-                # TODO arrange that query
-                permission_in_role = session.query(Permission).filter((Permission.name == item.perm) & \
-                                                                      Permission.roles.contains(user.current.role))
-                if item.perm is None or permission_in_role.count() == 1:
+                if current_role.isPermitted(item.perm):
                     children = []
                     for i in item.children:
-                        permission_in_role = session.query(Permission).filter((Permission.name == i.perm) & \
-                                                                              Permission.roles.contains(user.current.role))
-                        if i.perm is None or permission_in_role.count() == 1:
+                        if current_role.isPermitted(i.perm):
                             children.append(i)
                     page = self.getToolbookPage(children)
                     self.mainToolbook.AddPage(imageId=item.image, page=page, select=False, text=item.label)

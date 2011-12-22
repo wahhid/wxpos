@@ -7,18 +7,19 @@ class ModuleWrapper:
         self.name = name
         self.parent = parent
         self.cfg = None
+        self.top_pathname = None
         self.valid = None
         self.dependencies = []
 
     def find(self):
         try:
-            _file, pathname, description = imp.find_module(self.name, [self.parent])
+            _file, self.top_pathname, description = imp.find_module(self.name, [self.parent])
         except ImportError as e:
             self.valid = False
             return None
         else:
             try:
-                self.cfg = imp.find_module('config', [pathname])
+                self.cfg = imp.find_module('config', [self.top_pathname])
             except ImportError as e:
                 self.valid = False
                 return False
@@ -29,7 +30,7 @@ class ModuleWrapper:
 
     def load(self):
         if not self.valid: return
-        self.top_module = imp.load_package(self.name, self.parent)
+        self.top_module = imp.load_package(self.name, self.top_pathname)
         self.module = imp.load_module(self.name+'.config', *self.cfg)
         self.dependencies = self.module.dependencies
 
@@ -43,9 +44,22 @@ class ModuleWrapper:
             load()
             return True
 
+    def init(self):
+        if not self.valid: return
+        try:
+            init = self.top_module.init
+        except AttributeError:
+            return
+        else:
+            return init()
+
     def __lt__(self, mod):
         return (self.name in mod.dependencies)
+    
+    def __repr__(self):
+        return '<ModuleWrapper %s>' % (self.name, )
 
+modules = []
 def init():
     global modules
     print '*Loading modules...'
@@ -75,9 +89,6 @@ def init():
                 print '*No config module for', mod.name
             else:
                 mod.load()
-            print '*Loading DB Objects', mod.name
-            if not mod.load_database_objects():
-                print '*DB Objects missing'
             if mod.valid:
                 modules.append(mod)
     print '*(%d) modules found: %s' % (len(modules), ', '.join([m.name for m in modules]))
@@ -96,13 +107,22 @@ def checkDependencies():
 def isInstalled(module_name):
     return (module_name in [mod.name for mod in modules])
 
+def all():
+    return tuple(modules)
+
 # DATABASE EXTENSION
+
+def loadDB():
+    for mod in modules:
+        print '*Loading DB Objects', mod.name
+        if not mod.load_database_objects():
+            print '*DB Objects missing'
 
 def configDB():
     print '*Clearing database...'
-    pos.database.clear()
+    pos.database.config.clear()
     print '*Re-creating database'
-    pos.database.create()
+    pos.database.config.create()
 
 def configTestDB():
     print '*Adding test values to database...'

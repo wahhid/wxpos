@@ -28,5 +28,4 @@ class DiaryEntry(pos.database.Base, common.Item):
         return "<DiaryEntry %d %s of %s on %s>" % \
                (self.quantity, self.operation, self.product, self.date)
 
-find = common.find(DiaryEntry)
 add = common.add(DiaryEntry)

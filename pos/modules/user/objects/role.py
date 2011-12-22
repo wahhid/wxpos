@@ -23,12 +23,15 @@ class Role(pos.database.Base, common.Item):
         self.name = name
         self.permissions = permissions
 
+    def isPermitted(self, permission):
+        if permission is None:
+            return True
+        elif type(permission) == str:
+            return (permission in [p.name for p in self.permissions])
+        else:
+            return (permission in self.permissions)
+
     def __repr__(self):
         return "<Role %s>" % (self.name,)
 
-    @hybrid_method
-    def isPermitted(self, permission):
-        return (permission is None) or (permission in self.permissions)
-
-find = common.find(Role)
 add = common.add(Role)

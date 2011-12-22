@@ -1,7 +1,5 @@
 import wx
 
-from pos.modules.base.objects.idManager import ids
-
 VIEW_MODE, EDIT_MODE = 0, 1
 
 class ManagePanel:

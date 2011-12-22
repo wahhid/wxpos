@@ -23,5 +23,4 @@ class Category(pos.database.Base, common.Item):
     def __repr__(self):
         return "<Category %s>" % (self.name,)
 
-find = common.find(Category)
 add = common.add(Category)

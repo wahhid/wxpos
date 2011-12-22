@@ -14,15 +14,10 @@ pos.menu.init()
 
 print '*Importing database...'
 import pos.database
-pos.database.init()
 
 print '*Importing modules...'
 import pos.modules
 pos.modules.init()
-
-print '*Creating IdManager...'
-from pos.modules.base.objects import idManager
-idManager.init()
 
 class PosApp(wx.App):
     def __init__(self, config, redirect):
@@ -36,6 +31,14 @@ class PosApp(wx.App):
             return self.runApp()
 
     def runApp(self):
+        print '*Starting database...'
+        try:
+            pos.database.init()
+        except Exception as e:
+            wx.MessageBox('Could not connect to database:\n%s' % (e,), 'Database error', style=wx.ICON_ERROR | wx.OK)
+            return False
+        pos.modules.loadDB()
+        
         print '*Importing app frame'
         from pos.appFrame import AppFrame
         
@@ -44,10 +47,10 @@ class PosApp(wx.App):
         print '*Loading menu...'
         pos.menu.load()
         print '*Initiating App...'
-        if pos.modules.isInstalled('user'):
-            print '*Module installed user'
-            print '*Login required'
-            if not self.requireLogin():
+        for mod in pos.modules.all():
+            init = mod.init()
+            if init is not None and not init:
+                print '*Initiating module', mod.name, 'failed.'
                 return False
         self.main = AppFrame(None)
         self.main.loadMenu()
@@ -55,12 +58,6 @@ class PosApp(wx.App):
         self.main.Show()
         self.SetTopWindow(self.main)
         return True
-
-    def requireLogin(self):
-        from pos.modules.user.dialogs import LoginDialog
-        login = LoginDialog(None)
-        result = login.ShowModal()
-        return (result == wx.ID_OK)
 
     def runConfig(self):
         from pos.modules.base.dialogs.dbconfig import ConfigDialog
@@ -70,8 +67,13 @@ class PosApp(wx.App):
         if not cont:
             return False
         
-        print '*Restarting database...'
-        pos.database.restart()
+        print '*Starting database...'
+        try:
+            pos.database.init()
+        except Exception as e:
+            wx.MessageBox('Could not connect to database:\n%s' % (e,), 'Database error', style=wx.ICON_ERROR | wx.OK)
+            return False
+        pos.modules.loadDB()
         
         retCode = wx.MessageBox('Reconfigure Database?\nThis will drop the database you chose and recreate it.', 'Database config', style=wx.YES_NO | wx.ICON_QUESTION)
         reset = (retCode == wx.YES)
