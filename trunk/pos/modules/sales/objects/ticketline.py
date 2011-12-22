@@ -34,5 +34,4 @@ class TicketLine(pos.database.Base, common.Item):
     def __repr__(self):
         return "<TicketLine %s in Ticket #%s>" % (self.id, self.ticket.id)
 
-find = common.find(TicketLine)
 add = common.add(TicketLine)

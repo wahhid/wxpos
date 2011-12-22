@@ -62,5 +62,4 @@ class Customer(pos.database.Base, common.Item):
         total = sum(currency.convert(c_total, c, self.currency) for c_total, c in qry.all())
         return total
 
-find = common.find(Customer)
 add = common.add(Customer)

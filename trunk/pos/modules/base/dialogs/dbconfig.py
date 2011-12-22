@@ -4,15 +4,20 @@ import ConfigParser
 
 import pos
 
-config = ConfigParser.SafeConfigParser()
-config.read('wxpos.cfg')
-
-if not config.has_section('MySQL'):
-    config.add_section('MySQL')
+from ..panels import MySQLConfigPanel, SqliteConfigPanel
 
 class ConfigDialog(wx.Dialog):
+    def addOption(self, name, label, panel):
+        self.panelBook.AddPage(panel, label)
+        panel.TransferDataToWindow()
+        self.options[label] = name
+    
     def __init_ctrls(self):
-        self.dbPanel = DatabaseConfigPanel(self)
+        self.introTxt = wx.StaticText(self, -1, label='Select and configure the database system you want to use.')
+        
+        self.panelBook = wx.Choicebook(self, -1)
+        self.addOption('sqlite', 'Sqlite', SqliteConfigPanel(self.panelBook))
+        self.addOption('mysql', 'MySQL', MySQLConfigPanel(self.panelBook))
         
         self.okBtn = wx.Button(self, wx.ID_OK, label='OK')
         self.okBtn.Bind(wx.EVT_BUTTON, self.OnOkButton)
@@ -25,7 +30,8 @@ class ConfigDialog(wx.Dialog):
         self.controlSizer.Add(self.cancelBtn, 0, border=5, flag=wx.ALL | wx.EXPAND)
         
         self.mainSizer = wx.BoxSizer(orient=wx.VERTICAL)
-        self.mainSizer.Add(self.dbPanel, 0, border=5, flag=wx.ALL | wx.EXPAND)
+        self.mainSizer.Add(self.introTxt, 0, border=5, flag=wx.ALL | wx.EXPAND)
+        self.mainSizer.Add(self.panelBook, 1, border=5, flag=wx.ALL | wx.EXPAND)
         self.mainSizer.Add(self.controlSizer, 0, border=5, flag=wx.ALL | wx.EXPAND)
 
         self.SetSizer(self.mainSizer)
@@ -34,87 +40,27 @@ class ConfigDialog(wx.Dialog):
         wx.Dialog.__init__(self, parent, -1,
               size=wx.Size(400, 500), title='MySQL Configuration')
         
+        self.options = {}
         self.__init_ctrls()
         self.__init_sizers()
+        
+        dbName = pos.database.config.get_used()
+        for i in range(self.panelBook.GetPageCount()):
+            dbLabel = self.panelBook.GetPageText(i)
+            if dbName == self.options[dbLabel]:
+                self.panelBook.SetSelection(i)
+                break
 
-        self.dbPanel.TransferDataToWindow()
+        selected = self.panelBook.GetSelection()
+        dbPanel = self.panelBook.GetPage(selected)
+        dbPanel.TransferDataToWindow()
 
     def OnOkButton(self, event):
-        if self.dbPanel.Validate():
-            configfile = open('wxpos.cfg', 'wb')
-            if self.dbPanel.TransferDataFromWindow():
-                config.write(configfile)
+        selected = self.panelBook.GetSelection()
+        dbPanel = self.panelBook.GetPage(selected)
+        dbLabel = self.panelBook.GetPageText(selected)
+        dbName = self.options[dbLabel]
+        if dbPanel.Validate():
+            if dbPanel.TransferDataFromWindow():
+                pos.database.config.use(dbName)
                 event.Skip()
-
-class DatabaseConfigPanel(wx.Panel):
-    def __init_ctrls(self):
-        self.hostLbl = wx.StaticText(self, -1, label='Hostname')
-        self.hostTxt = wx.TextCtrl(self, -1, validator=ConfigValidator('hostname'))
-
-        self.portLbl = wx.StaticText(self, -1, label='Port')
-        self.portTxt = wx.TextCtrl(self, -1, validator=ConfigValidator('port'))
-
-        self.usernameLbl = wx.StaticText(self, -1, label='Username')
-        self.usernameTxt = wx.TextCtrl(self, -1, validator=ConfigValidator('username'))
-
-        self.passwordLbl = wx.StaticText(self, -1, label='Password')
-        self.passwordTxt = wx.TextCtrl(self, -1,
-                style=wx.TE_PASSWORD, validator=ConfigValidator('password'))
-
-        self.dbNameLbl = wx.StaticText(self, -1, label='DB Name')
-        self.dbNameTxt = wx.TextCtrl(self, -1, validator=ConfigValidator('db_name'))
-    
-    def __init_sizers(self):
-        self.mainSizer = wx.FlexGridSizer(rows=6, cols=2)
-        self.mainSizer.Add(self.hostLbl, 0, border=5, flag=wx.ALL | wx.EXPAND)
-        self.mainSizer.Add(self.hostTxt, 0, border=5, flag=wx.ALL | wx.EXPAND)
-        self.mainSizer.Add(self.portLbl, 0, border=5, flag=wx.ALL | wx.EXPAND)
-        self.mainSizer.Add(self.portTxt, 0, border=5, flag=wx.ALL | wx.EXPAND)
-        self.mainSizer.Add(self.usernameLbl, 0, border=5, flag=wx.ALL | wx.EXPAND)
-        self.mainSizer.Add(self.usernameTxt, 0, border=5, flag=wx.ALL | wx.EXPAND)
-        self.mainSizer.Add(self.passwordLbl, 0, border=5, flag=wx.ALL | wx.EXPAND)
-        self.mainSizer.Add(self.passwordTxt, 0, border=5, flag=wx.ALL | wx.EXPAND)
-        self.mainSizer.Add(self.dbNameLbl, 0, border=5, flag=wx.ALL | wx.EXPAND)
-        self.mainSizer.Add(self.dbNameTxt, 0, border=5, flag=wx.ALL | wx.EXPAND)
-        self.SetSizer(self.mainSizer)
-    
-    def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
-        
-        self.__init_ctrls()
-        self.__init_sizers()
-
-class ConfigValidator(wx.PyValidator):
-    def __init__(self, key):
-        wx.PyValidator.__init__(self)
-        self.key = key
-
-    Clone = lambda self: ConfigValidator(self.key)
-
-    def Validate(self, parent):
-        win = self.GetWindow()
-        return True
-
-    def TransferToWindow(self):
-        try:
-            win = self.GetWindow()
-            try:
-                data = config.get('MySQL', self.key)
-            except:
-                data = ''
-            win.SetValue(data)
-        except:
-            print '-- ERROR -- in ConfigValidator.TransferToWindow'
-            print '--', self.key
-            raise
-        return True
-
-    def TransferFromWindow(self):
-        try:
-            win = self.GetWindow()
-            config.set('MySQL', self.key, win.GetValue())
-        except:
-            print '-- ERROR -- in CoonfigValidator.TransferFromWindow'
-            print '--', self.key
-            raise
-        return True

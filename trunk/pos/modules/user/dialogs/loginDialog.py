@@ -3,6 +3,7 @@ import wx
 import pos
 
 import pos.modules.user.objects.user as user
+from pos.modules.user.objects.superuser import SuperUser
 
 from pos.modules.user.windows import UserCatalogList
 
@@ -51,10 +52,23 @@ class LoginDialog(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, -1, size=wx.Size(400, 500), title='Login')
 
+        F3CommandId = wx.NewId()
+        accTable = wx.AcceleratorTable([(wx.ACCEL_NORMAL, wx.WXK_F3, F3CommandId)])
+        self.Bind(wx.EVT_MENU, self.OnF3Command, id=F3CommandId) 
+        self.SetAcceleratorTable(accTable)
+
         self.__init_ctrls()
         self.__init_sizers()
 
         self.panel.SetValidator(LoginValidator())
+    
+    def OnF3Command(self, event):
+        event.Skip()
+        superuser = SuperUser()
+        password = wx.GetPasswordFromUser('Enter Super User password', 'Super User')
+        if superuser.login(password):
+            user.current = superuser
+            self.Close()
 
 class LoginValidator(wx.PyValidator):
     def __init__(self):

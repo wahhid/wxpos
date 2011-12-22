@@ -22,5 +22,4 @@ class CurrencyUnit(pos.database.Base, common.Item):
     def __repr__(self):
         return "<CurrencyUnit %s>" % (self.currency.format(self.value),)
 
-find = common.find(CurrencyUnit)
 add = common.add(CurrencyUnit)

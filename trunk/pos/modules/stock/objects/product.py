@@ -76,5 +76,4 @@ class Product(pos.database.Base, common.Item):
         self._quantity -= value
         diary.add(operation='out', quantity=value, product=self)
 
-find = common.find(Product)
 add = common.add(Product)

@@ -21,5 +21,4 @@ class Permission(pos.database.Base, common.Item):
     def __repr__(self):
         return "<Permission %s>" % (self.name,)
 
-find = common.find(Permission)
 add = common.add(Permission)

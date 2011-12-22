@@ -25,7 +25,6 @@ class User(pos.database.Base, common.Item):
 
     def __init__(self, username, password, role):
         self.username = username
-        #self._real_password = password
         self.encoded_password = encode(password)
         self.role = role
 
@@ -35,29 +34,14 @@ class User(pos.database.Base, common.Item):
 
     @password.setter
     def password(self, value):
-        #self._real_password = value
         self.encoded_password = encode(value)
 
     def login(self, password):
         return self.encoded_password == encode(password)
 
-#    @password.expression
-#    def password(cls):
-#        return func.md5(cls._real_password)
-
-#    @password.comparator
-#    def password(cls):
-#        return PasswordComparator(cls.encoded_password)
-
     def __repr__(self):
         return "<User %s>" % (self.username,)
 
-#class PasswordComparator(Comparator):
-#    def __eq__(self, other):
-#        #return self.__clause_element__() == func.md5(other)
-#        return self.__clause_element__() == encode(other)
-
-find = common.find(User)
 add = common.add(User)
 
 current = None

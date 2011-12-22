@@ -13,8 +13,6 @@ from pos.modules.currency.objects.currency import Currency
 from ..dialogs import EditDialog, PayDialog
 from ..windows import TicketChoice, TicketList, CatalogBook
 
-from pos.modules.base.objects.idManager import ids
-
 class SalesPanel(wx.Panel):
     def _init_sizers(self):
         self.findSizer = wx.GridBagSizer(hgap=0, vgap=0)
@@ -147,8 +145,9 @@ class SalesPanel(wx.Panel):
         wx.Panel.__init__(self, parent, -1, style=wx.TAB_TRAVERSAL)
 
         # Accelerator Table: Press F3 to set focus to barcode field
-        accTable = wx.AcceleratorTable([(wx.ACCEL_NORMAL, wx.WXK_F3, ids['F3Command'])])
-        self.Bind(wx.EVT_MENU, self.OnF3Command, id=ids['F3Command']) 
+        F3CommandId = wx.NewId()
+        accTable = wx.AcceleratorTable([(wx.ACCEL_NORMAL, wx.WXK_F3, F3CommandId)])
+        self.Bind(wx.EVT_MENU, self.OnF3Command, id=F3CommandId)  
         self.SetAcceleratorTable(accTable)
 
         self._init_main()

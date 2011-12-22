@@ -1,0 +1,129 @@
+#########################
+#	MODULES		#
+#			#
+#########################
+
+base
+** should the config be included here? for db now, but also for other modules for the future, like there is managePanel, there might be some kind of ConfigPanel
+
+currency
+** add the ability to change the default currency in the config panel
+** make surea link to the currency is established anywhere there is a price mentioned
+
+user
+** add a menu restriction object which links a permission to specific Menu items(parent, child). Many-to-Many-relationship.
+			Use something like select distinct to get all the menu items allowed per role/user.
+
+customers
+** still has the address and contact tables not set up, make sure to make it up to date and arrange the panels accordingly
+** customerdiscount: discount, product_id, customer_id; might be useful (like in posper)
+
+stock
+** if no payment method is allowed, the first one is enabled by default. this is a bug not a feature.
+** add ability to set buy price, sell price, taxes (like posper)
+** review the stock panels
+	max value set to 100 and min value to 0 in stock diary quantity spin control
+		check to see if there is the same problem other places
+	arrange, when adding products the ability to insert initial quantity also (+make sure it is added to the stock diary as init or modification)
+
+sales
+** numbering of tickets: 123874773887 is not readable. something like 2012-12-45 is.
+** transfer of old tickets to older tables. use the same principle as used for "soft deletion" (with 3 tables and ForeignKeys)
+** Print functionality
+** Cash drawer functionality
+** Cash register functionality (close cash): cash difference, date open date close, user, etc...
+
+payments
+** payment: Provides the ability to add shop payments made for maintenance, salaries, stock buying or other expenses or incomes to keep track of cash flow.
+
+taxes
+** taxes: Useless for now.
+
+reports
+** make sure all of the following are present and working:
+	- sales
+	- customers
+	- stock
+	- stock diary
+	- users
+	- what else ? nespresso :D
+** add a way to export to excel or stuff add a button (format)
+** add a save as button + print button + view
+** add the choice of currency for the report, and choose one by default, depending on customer and default currency.
+** the getFilename should not be in the panels submodule, but in the objects part, and it will be returned
+** in stock report, add the choice between show only in stock, only available, only discontinued ...
+** add the ability to filter by (i think most are useless):
+	- payment methods
+	- pay date range (if not equal to close date)
+	- close date range
+	- customer choice
+	- paid or not
+	- buy hour
+	- amount
+	- currency
+** make a common function to let all tickets, ticketlines, etc. look the same in a pdf report. plus the options to show this n not that, blabla.ex: ticketList(_id=id, show_payment=True, show_date=False, show_user=True, ...)
+** make one common thing for footer, header, things like that (style, wutever)
+
+#########################
+#	  MENU		#
+#			#
+#########################
+## Main
+	Sales
+	Debts
+	** Close cash *MenuItem(m, "Close cash", main, 'cash')
+	** Payments *MenuItem(m, "Payments", main, 'cash')
+## Customers
+	Customers
+	Customer Groups
+	** Customer Discounts
+## Reports
+	Stock
+	Sales
+	Users
+	Stock Diary
+	Customers
+	** Close cash
+## Users
+	Users
+	Roles
+	Permissions
+## Stock
+	Products
+	Categories
+	Stock diary
+## System
+	Configuration
+	Currencies
+## Administration
+	User
+
+#########################
+#	DATABASE	#
+#			#
+#########################
+** soft delete or not? i think yes [[[ NO SEE COMMENTS INLINE IN CODE ]]]=> should be implemented at the getAll, delete, update level => meaning at the common object level
+** test with other than mysql and sqlite, try (postgresql), or maybe some other thing supported by SQLAlchemy
+** create a module called log or something that will write the details of db actions to a page of the toolbook
+
+#########################
+#	GENERAL		#
+#			#
+#########################
+** add a init function to each module that will make it load upon starting app like first time config + no user logged in or similar
+** we can stop using the thing like Item(data1, data2, ...) and use i=Item();i.data1 = data1;... that way we could use i.currency_id = 1 OR i.currency = whatever and choose to ommit certain default values
+** menu, resource system for icons, not images directory ./images/menu/%s-%s.png
+** config system, some kind of config.py file in each module with the parameters/default/whatever and a panels/config.py config panel referenced in __init__.py .... plus a page in a Notebook for each module
+
+#########################
+#	POSPER		#
+#			#
+#########################
+** images
+** taxes
+** location (warehouse thing)
+** add visible modifier to the users table, to set whether or not to show him in the main dialog
+	+ make a 'secret' shortcut for 'super user' to enter his user, password, with full access
+** resource system for templates and stuff, was in mysql db, i think its better to be in a file in the 'base' module, not bad huh?
+** floor and place (for restaurants)
+** reservation

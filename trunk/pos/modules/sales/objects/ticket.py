@@ -89,5 +89,4 @@ class Ticket(pos.database.Base, common.Item):
         total = session.query(func.sum(TicketLine.amount*TicketLine.sell_price)).filter(TicketLine.ticket == self).one()[0]
         return total if total is not None else 0
 
-find = common.find(Ticket)
 add = common.add(Ticket)

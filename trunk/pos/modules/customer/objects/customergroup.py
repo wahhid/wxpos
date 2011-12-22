@@ -22,5 +22,4 @@ class CustomerGroup(pos.database.Base, common.Item):
     def __repr__(self):
         return "<CustomerGroup %s>" % (self.name)
 
-find = common.find(CustomerGroup)
 add = common.add(CustomerGroup)
