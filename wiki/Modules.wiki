@@ -2,17 +2,21 @@
 
 = Modules =
 
-A wxpos module is a part of the software which has a specific role in it: as "user" that gives the ability to login to the software or "stock" that allows the user to keep track of his stock, etc... Got the idea?
+A wxpos module is a part of the software which has a specific role in it: as "user" that gives the ability to login to the software or "stock" that allows the user to keep track of his stock, etc...
 
 It is a directory in the pos/modules/ directory which can/must contain the following elements: (suppose the name of the module "mname")
-  * pos/modules/mname/__init__.py that defines the dependencies tuple (that contains a list of other modules on which it depends) and a !ModuleMenu class (which defines the menu items this module should have in the menu) and the config function that will configure the db tables and stuff for that module (and some test values).
-  * pos/modules/mname/objects/ A python module, usually based on the "base" module objects that defines an interface to the database system. Anyway see the pos/modules/base/objects/common.py and the pos/modules/user/objects/user.py for ex to understand it, it's not that complicated...
+  * pos/modules/mname/__init__.py that defines the init function that is called once before the application is run.
+  * pos/modules/mname/config.py that defines:
+    * the dependencies tuple (that contains a list of other modules on which it depends)
+    * a !ModuleMenu class (which defines the menu items this module should have in the menu)
+    * the load_database_objects function that will load the main objects of the module that will allow SQLAlchemy to configure the db tables for that module
+    * the test_database_values function that will insert test database values if the user chooses to.
+  * pos/modules/mname/objects/ A python module, usually based on the "base" module objects and the SQLAlchemy Base declarative object, that define an interface to the database system. Anyway, see the pos/modules/base/objects/common.py and the pos/modules/user/objects/user.py for example to understand it.
   * pos/modules/mname/panels/ Contains the panels used in the main toolbook of the app frame. That means every menu item should have a panel defined in that python module associated with it, as the the app frame contains essentially only a wx.Toolbook whose pages are the menu items and the panels to which each one is associated...
-  * pos/modules/mname/dialogs/ Contains the dialogs that could be used for the functionality of the module to be complete...
-  * pos/modules/mname/windows/ Contains the common windows/widgets (ex. listbox, controls, ...) that are used in many panels/dialogs...
+  * pos/modules/mname/dialogs/ Contains the dialogs that could be used for the functionality of the module to be complete.
+  * pos/modules/mname/windows/ Contains the common windows/widgets (ex. listbox, notebook, controls, ...) that are used in many panels/dialogs...
 
 That structure is recommended but not required. One thing is absolutely required: the dependencies tuple, even if it is empty...
-So, there might be no db config, no objects or no panels directories. But what would there be then ? right ? That is why it is recommended to follow that structure. But still it's completely up to you, and anyway that is what is followed by all those modules already done.
 
 That is a list of all modules done and to be done:
 
@@ -20,19 +24,19 @@ That is a list of all modules done and to be done:
 
 === Content ===
 Base module that provides the most basic functionality of the pos system. It is a base that should be extended by other modules.
-    * idManager: object: Keeps track of given ids to windows in a dict. If a key is missing, it assigns a wx.NewId() to that key. This is no longer essential as ids are used rarely.
-    * common: object: Base module for easy connection between database and object. Provides a set of similar functions for deleting, updating, adding and finding items.
+    * idManager: object: Keeps track of given ids to windows in a dict. If a key is missing, it assigns a wx.NewId() to that key. This is no longer essential as ids are used rarely. It has been removed.
+    * common: object: Base module for easy connection between database and object. Provides a set of similar functions for deleting, updating, adding and finding items. The find function was removed because useless now that SQLAlchemy is used, others may be removed also. Using queries instead.
     * manage: panel: Base panel for CRUD operation (new item, delete item, update item, list items)
 
 === TODO ===
-
+  * Add a common interface for module configurations.
 
 == CURRENCY ==
 
 === Content ===
 Curency module that manages multiple currencies, with their symbols, default currency and conversion between one and another
   * currency: object: Allows conversion between units, retreiving the default one and all the other functionality of the currency module (name, symbol, value for conversion). ex: 1500 LL = 1$ => LL value=1; $ value=1500x1 = 1500
-  * currencies: panel: UI based on managePanel that allows editing of value and name and symbol of the currencies. No deletion allowed, it just complicates things if you delete a currency which is used for product prices. It can be allowed, but i don't see any benefit from doing so.
+  * currencies: panel: UI based on managePanel that allows editing of value and name and symbol of the currencies. Be careful when deleting currencies as it might cascade delete all the products and customers associated to it.
 
 === TODO ===
   * add the ability to change the default currency
@@ -48,6 +52,7 @@ A customer might be a person or a company that frequently purchases from the com
   * customergroups: panel: Manage Panel to the groups.
 
 === TODO ===
+  * Contact and Address to be added
   * customerdiscount: discount(0%-100%), product, customer
 
 
@@ -60,16 +65,17 @@ A user is a person who can login and use the application. Every one of them has 
   * permission: object: Name, description of what is allowed to do with that one.
   * users,roles,permissions: panel: Based on ManagePanel. Allow management of users, their roles, their permissions.
   * user: panel: Allows limited editing of the currently logged in user by himself.
+  * superuser: object Acts almost as a user that has all the permissions. Should not always be used, as not tested with every module.
 
 === TODO ===
-  * the permission thing makes no sense, unless some super user can assign that permission to that module or that function in that module. Until now, it is not done. The permission system is still effective but addition of permissions makes no sense.
+  * the permissions should be assigned to a MenuRestriction objects that would allow or disallow the use of a certain panel in the toolbook
 
 == STOCK ==
 
 === Content ===
 Provides functionality for adding and removing products that can be sold in the shop. These can be grouped in nested(or not) categories.
   * category: Name, parent category.
-  * product: object: Name, description, price, currency, code, reference, quantity, category.
+  * product: object: Name, description, price, currency, barcode, reference, quantity, category.
   * categories,products: panel: Based on ManagePanel. Allow management of categories and products.
 
 === TODO ===
@@ -82,7 +88,7 @@ Provides functionality for adding and removing products that can be sold in the 
 Provides the ability to create tickets and sell items to customers and customers with browsable categories and products and customers.
   * ticket: object: list of lines of sold items (which can be based on products or not) (may be assigned to a customer)
   * ticketline: object: line which contains a description of what is sold, price and amount.
-  * main: panel: Main panel in which is available a catalog(products/customers), a ticketline list and ticket manipulation actions.
+  * main: panel: Main panel in which is available a catalog (products/customers), a ticketline list and ticket manipulation actions.
 
 === TODO ===
   * Print functionality
@@ -105,6 +111,8 @@ Not done yet.
 Provides the abilty to generate reports of stock, payments, etc. on specific time period.
 Generates reports in the PDF format,( maybe excel also(later)) using reportlab.
 
+There are reports for these options currently: stock, sales, user's sales, customer's bought items, stock diary (ins and outs). All these should have filter options to choose currencies, products, and other restrictions on data displayed.
+
 === TODO ===
   * Arrange the filter process to make the reports as customizable as possible.
   * Add the ability to choose the design of the report pages, plus the header and footer and stuff.
@@ -113,7 +121,7 @@ Generates reports in the PDF format,( maybe excel also(later)) using reportlab.
 == TAXES ==
 
 === Content ===
-Useless for now.
+Seen in [http://posper.org POSper]. Not planned for, yet.
 
 === TODO ===
 Not done yet.
