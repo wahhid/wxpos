@@ -44,12 +44,11 @@ class AppFrame(wx.Frame):
     
     def loadMenu(self):
         self.mainToolbook.AssignImageList(pos.menu.il)
-        # TODO arrange that, change the whole permission system
+        # TODO arrange the permission-menu relation, change the whole permission system
         if pos.modules.isInstalled('user'):
             import pos.modules.user.objects.user as user
             for item in pos.menu.getItems():
                 current_role = user.current.role
-                session = pos.database.session()
                 if current_role.isPermitted(item.perm):
                     children = []
                     for i in item.children:
