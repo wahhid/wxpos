@@ -2,21 +2,15 @@
 
 = Introduction =
 
-wxpos is designed to be database independent. Currently it is working with MySQL.
-In the pos/database directory, there are currently 4 files:
-  * base: defines the BaseDB class, which defines the base methods of the DB object: connect, close, error.
-  * mysql: defines MysqlDB which inherits from BaseDB and defines the methods for connection, query execution, error handling...
-  * __init__: defines the DB class, the actual class that will be used. It inherits from MysqlDB in this case.
+wxpos is designed to be database independent. Currently it is best working with MySQL. It can also be used with SQLite. Support for PostgreSQL will be available soon.
+This is made possible with [http://sqlalchemy.org SQLAlchemy]. There will also be support for MS-SQL Server and other RDBMS that SQLAlchemy supports.
+In the pos/database directory, there are currently two files:
+  * __init__: defines the init function. Creates the engine, session and all that is used for SQLAlchemy ORM.
+  * config.py: interface to use the configuration system for connection to database systems
 
 = Configuring MySQL =
 
 In addition to that there is a dialog for configuration in pos/modules/base/dialogs/dbconfig.py
-This dialog is used when running wxpos-config. You can then choose the mysql host, username, password, port, db name, ...
+This dialog is used when running 'wxpos -c' or '--config'. You can then choose the mysql host, username, password, port, db name or sqlite filename to use.
 
-Run wxPos-config.py to configure the database tables, currently on MySQL only...
-
-= Note =
-
-The migration to other than MySQL databases will be made soon by using [http://www.sqlalchemy.org SQLAlchemy]. This will make it all independent of the dbm you use.
-You will be able to choose between MySQL, PostgreSQL, sqlite, ...
-Read more about SQLAlchemy for all the options you will have.
+Run "wxPos.py -c" or "wxPos.py --config" to configure the database, with optional testing values.
