@@ -47,6 +47,7 @@ class MySQLConfigPanel(wx.Panel):
         if not pos.config.has_section(config):
             pos.config.add_section(config)
             pos.config.set(config, 'drivername', 'mysql')
+            pos.saveConfig()
         
         self.initParam(config, ConfigValidator)
         self.addParam('host', 'Host', wx.TextCtrl, required=True)

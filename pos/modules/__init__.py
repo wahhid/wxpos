@@ -3,8 +3,9 @@ import imp, os, sys
 import pkgutil
 
 class ModuleWrapper:
-    def __init__(self, name, parent):
-        self.name = name
+    def __init__(self, pkg, parent):
+        self.package = pkg
+        self.name = pkg[1]
         self.parent = parent
         self.cfg = None
         self.top_pathname = None
@@ -12,26 +13,40 @@ class ModuleWrapper:
         self.dependencies = []
 
     def find(self):
-        try:
-            _file, self.top_pathname, description = imp.find_module(self.name, [self.parent])
-        except ImportError as e:
-            self.valid = False
-            return None
+        if hasattr(sys, 'frozen') and sys.frozen:
+            for pkg in pkgutil.iter_modules([os.path.join(self.parent, self.package[1])]):
+                if pkg[1] == 'config':
+                    self.cfg = pkg
+                    self.valid = True
+                    break
+            else:
+                self.valid = False
+            return self.valid
         else:
             try:
-                self.cfg = imp.find_module('config', [self.top_pathname])
+                _file, self.top_pathname, description = imp.find_module(self.name, [self.parent])
             except ImportError as e:
                 self.valid = False
-                return False
+                return None
             else:
-                self.valid = True
-                return True
-        return self.valid
+                try:
+                    self.cfg = imp.find_module('config', [self.top_pathname])
+                except ImportError as e:
+                    self.valid = False
+                    return False
+                else:
+                    self.valid = True
+                    return True
+                return self.valid
 
     def load(self):
         if not self.valid: return
-        self.top_module = imp.load_package(self.name, self.top_pathname)
-        self.module = imp.load_module(self.name+'.config', *self.cfg)
+        if hasattr(sys, 'frozen') and sys.frozen:
+            self.top_module = self.package[0].load_module(self.package[1])
+            self.module = self.cfg[0].load_module(self.name+'.'+self.cfg[1])
+        else:
+            self.top_module = imp.load_package(self.name, self.top_pathname)
+            self.module = imp.load_module(self.name+'.config', *self.cfg)
         self.dependencies = self.module.dependencies
 
     def load_database_objects(self):
@@ -64,33 +79,20 @@ def init():
     global modules
     print '*Loading modules...'
     modules_path = os.path.dirname(__file__)
-    packages = [p for p in pkgutil.walk_packages([modules_path])]
+    packages = [p for p in pkgutil.walk_packages([modules_path]) if not p[1].startswith('_') and p[2]]
 
     modules = []
-    if hasattr(sys, 'frozen') and sys.frozen:
-        for pkg in packages:
-            # TODO
-            try:
-                module = pkg[0].load_module(pkg[1])
-            except ImportError:
-                print '*Invalid module', pkg[1]
-            else:
-                modules.append(module)
-    else:
-        for pkg in packages:
-            if pkg[1].startswith('_'):
-                print '*Ignored module', pkg[1]
-                continue
-            mod = ModuleWrapper(pkg[1], modules_path)
-            find = mod.find()
-            if find is None:
-                print '*Invalid module', mod.name
-            elif not find:
-                print '*No config module for', mod.name
-            else:
-                mod.load()
-            if mod.valid:
-                modules.append(mod)
+    for pkg in packages:
+        mod = ModuleWrapper(pkg, modules_path)
+        find = mod.find()
+        if find is None:
+            print '*Invalid module', mod.name
+        elif not find:
+            print '*No config module for', mod.name
+        else:
+            mod.load()
+        if mod.valid:
+            modules.append(mod)
     print '*(%d) modules found: %s' % (len(modules), ', '.join([m.name for m in modules]))
     checkDependencies()
     modules.sort()

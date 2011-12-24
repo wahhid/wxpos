@@ -18,17 +18,11 @@ data_files = [('images', glob('./images/*.*')),
               ('images/commands', glob('./images/commands/*.*')),]
 
 # Scripts
-run = {'script': "wxPos-no-console.py",
+run = {'script': "wxPos.py",
        'dest_base': "run",
-       'version': "0.6",
-       'name': "wxPos main executable"
+       'version': "0.8",
+       'name': "wxPos"
        }
-
-config = {'script': "wxPos-config.py",
-          'dest_base': "config",
-          'version': "0.6",
-          'name': "wxPos configuration executable"
-          }
 
 # Options
 options = {}
@@ -36,7 +30,7 @@ options = {}
 # Options Py2Exe
 includes = []
 excludes = []
-packages = ["pos", "reportlab"]
+packages = ["pos", "reportlab", "sqlalchemy", "MySQLdb", "sqlite3"]
 py2exe_options = {"py2exe": {#"compressed": 0, 
                           #"optimize": 0,
                           "includes": includes,
@@ -55,7 +49,6 @@ options.update(py2exe_options)
 
 # Main setup call
 setup(windows=[run],
-      console=[config],
       options=options,
       data_files=data_files
       )

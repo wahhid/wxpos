@@ -1,43 +1,33 @@
+import argparse, sys
+
+parser = argparse.ArgumentParser(description='Launch wxPos')
+parser.add_argument('--wx', type=str, default=None,
+                   help='the wx version string')
+parser.add_argument('-c', '--config', action="store_true", default=False,
+                   help='run wxPos configuration')
+parser.add_argument('-o', '--output', type=argparse.FileType('w'), default=None,
+                   help='output redirection')
+args = parser.parse_args()
+
+if args.output and sys.stdout != args.output:
+    sys.stdout = args.output
+    sys.stderr = args.output
+
 print '[INIT]'
 
-import traceback, sys, StringIO
+import traceback, StringIO
 
-ver = sys.argv[1] if len(sys.argv) > 1 else '2.9'
-import wxversion
-wxversion.select(ver)
-print 'Changing wx version to', ver
+if not (hasattr(sys, 'frozen') and sys.frozen) and args.wx is not None:
+    import wxversion
+    print 'Changing wx version to', args.wx
+    wxversion.select(args.wx)
 
 import wx
 import wx.lib.dialogs
 
-class MyLog(wx.PyLog):
-    def __init__(self, textCtrl, logTime=0):
-        wx.PyLog.__init__(self)
-        self.tc = textCtrl
-        self.logTime = logTime
-
-    def DoLogString(self, message, timeStamp):
-        print 'LOOGOGOGOGOGO'
-        print message, timeStamp
-        if self.logTime:
-            message = time.strftime("%X", time.localtime(timeStamp)) + \
-                      ": " + message
-        #if self.tc:
-        #    self.tc.AppendText(message + '\n')
-
-# Set the wxWindows log target to be this textctrl
-#wx.Log_SetActiveTarget(wx.LogTextCtrl(self.log))
-
-# But instead of the above we want to show how to use our own wx.Log class
-wx.Log_SetActiveTarget(MyLog(None))#self.log))
-
-# for serious debugging
-#wx.Log_SetActiveTarget(wx.LogStderr())
-#wx.Log_SetTraceMask(wx.TraceMessages)
-
 try:
     import pos.app
-    pos.app.run()
+    pos.app.run(config=args.config)
 except KeyboardInterrupt:
     sys.exit()
 except Exception as e:
@@ -51,3 +41,5 @@ except Exception as e:
     strio.close()
 finally:
     print '[DONE]'
+    if args.output and sys.stdout != args.output:
+        args.output.close()
