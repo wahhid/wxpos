@@ -15,6 +15,9 @@ engine, Base, Session = None, None, None
 def init():
     global engine, Base, Session
 
+    if engine is not None:
+        return
+
     url = loadconfig()
 
     engine = create_engine(url)#, echo=True)

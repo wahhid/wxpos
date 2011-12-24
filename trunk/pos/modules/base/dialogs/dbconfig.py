@@ -38,13 +38,14 @@ class ConfigDialog(wx.Dialog):
     
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, -1,
-              size=wx.Size(400, 500), title='MySQL Configuration')
+              size=wx.Size(400, 500), title='Database Configuration')
+        
+        dbName = pos.database.config.get_used()
         
         self.options = {}
         self.__init_ctrls()
         self.__init_sizers()
         
-        dbName = pos.database.config.get_used()
         for i in range(self.panelBook.GetPageCount()):
             dbLabel = self.panelBook.GetPageText(i)
             if dbName == self.options[dbLabel]:

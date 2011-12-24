@@ -8,7 +8,7 @@ base
 
 currency
 ** add the ability to change the default currency in the config panel
-** make surea link to the currency is established anywhere there is a price mentioned
+** make sure a link to the currency is established anywhere there is a price mentioned
 
 user
 ** add a menu restriction object which links a permission to specific Menu items(parent, child). Many-to-Many-relationship.
@@ -110,9 +110,7 @@ reports
 #	GENERAL		#
 #			#
 #########################
-** add a init function to each module that will make it load upon starting app like first time config + no user logged in or similar
-** we can stop using the thing like Item(data1, data2, ...) and use i=Item();i.data1 = data1;... that way we could use i.currency_id = 1 OR i.currency = whatever and choose to ommit certain default values
-** menu, resource system for icons, not images directory ./images/menu/%s-%s.png
+** we can stop using the thing like Item(data1, data2, ...) and use i=Item();i.data1 = data1;... that way we could use i.currency_id = 1 OR i.currency = whatever and choose to omit certain default values** menu, resource system for icons, not images directory ./images/menu/%s-%s.png
 ** config system, some kind of config.py file in each module with the parameters/default/whatever and a panels/config.py config panel referenced in __init__.py .... plus a page in a Notebook for each module
 
 #########################

@@ -47,6 +47,7 @@ class SqliteConfigPanel(wx.Panel):
         if not pos.config.has_section(config):
             pos.config.add_section(config)
             pos.config.set(config, 'drivername', 'sqlite')
+            pos.saveConfig()
         
         self.initParam(config, ConfigValidator)
         self.addParam('database', 'Filename', wx.TextCtrl, required=False)
