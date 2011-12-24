@@ -17,23 +17,20 @@ wxpos is made with Python, using wxPython (subset of wxWidgets).
   * [http://python.org Python] is used because it is cross-platform mainly.
   * [http://www.wxpython.org/ wxPython] is used for the GUI (graphical user interface) because it is also cross-platform, and provides a native look on any platform.
 
-wxpos is designed to be easily migrated to any database system (although currently it is only working with MySQL, it "should" be easy to change it)
+wxpos is designed to be easily migrated to any database system, currently MySQL and SQLite, and PostgreSQL in the future.
 
 = About the directory structure and files =
 
-There are three files in the "trunk" directory:
-  * wxPos.py is the main application file. Opening this files will call the app.run() function of the application causing the application to run obviously. But that file will not redirect the output, meaning you'll see the output targeted for debugging in the black window.
-  * wxPos-no-console.py is the same as wxPos.py but with one difference: the output is redirected to "out.log". That is more convenient to keep track of the debugged info.
-  * wxPos-version.py is also the same as wxPos.py, except that it can run with a chosen version (passed as a command line argument) or else it will try to run with wx version 2.9
-  * wxPos-config.py will run the pos.config.run() function which will configure the database for use with wxPos and its different modules. To read more about configuring database go to [Database].
+There are two files in the main directory:
+  * wxPos.py is the main application file. With command-line arguments, you can choose to redirect output to a file and hide the console window(use the -o or --output switch). Use -c or --config to run the database configuration dialog. For more details, use 'python wxPos.py -h'
 
-The pos directory is the main python module used for the wxpos software.
+The pos directory is the main python module used for the wxPos software.
 The files in pos directory describe themselves by their names.
 The directories are as following:
   * pos/modules/ Discussed in [Modules]
   * pos/database/ Discussed in [Database]
   * pos/menu/ Contains the base classes for the menu, menu root items, and sub items. The functionality is there. The menu items are created from within the __init__.py file of the module itself. See the pos/modules/base/__init__.py of "base" module and pos/modules/user/__init__.py of "user" module for usage examples.
 
-The images directory: Contains two directories menu and commands: menu contains icons of the menu entries, and commands some icons for the common actions of the different modules. The images directory should be changed and especially the menu directory, because the images directory should not depend on any module. In the future, there would be an images directory in each module directory maybe...
+The images directory: Contains two directories menu and commands: menu contains icons of the menu entries, and commands some icons for the common actions of the different modules. The images directory should be changed and especially the menu directory, because the images directory should not depend on any module. In the future, there would be a system for images and resources.
 
 The reports directory: all the reports of the report module are created there. If the directory does not exist, I suppose it will be a problem because the directory is not created dynamically. That thing should be fixed. And that directory along with some others if needed should be in a directory called "data".
