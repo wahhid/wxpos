@@ -1,7 +1,7 @@
 import ConfigParser
 import os, sys
 
-import pos.database
+import pos.database as database
 
 def readConfig():
     global config, config_filename

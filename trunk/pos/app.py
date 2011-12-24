@@ -79,6 +79,7 @@ def runConfig():
     print '*Done.'
     return False
 
+app = None
 def run(config=False):
     global app
     print '*Creating App instance...'
