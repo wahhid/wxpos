@@ -12,7 +12,7 @@ class SqliteConfigPanel(wx.Panel):
     def addParam(self, name, label, wxObj, required=False, style=None):
         self.field_order.append(name)
         self.fields[name] = [None, None, None]
-        enabled = required or pos.config.has_option(self.config, name)
+        enabled = required or pos.config[self.config, name] is not None
         
         self.fields[name][0] = wx.CheckBox(self, -1)
         self.fields[name][0].Bind(wx.EVT_CHECKBOX, lambda evt, n=name: self.OnCheckBox(evt, n))
@@ -43,13 +43,7 @@ class SqliteConfigPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
         
-        config = 'db.sqlite'
-        if not pos.config.has_section(config):
-            pos.config.add_section(config)
-            pos.config.set(config, 'drivername', 'sqlite')
-            pos.saveConfig()
-        
-        self.initParam(config, ConfigValidator)
+        self.initParam('db.sqlite', ConfigValidator)
         self.addParam('database', 'Filename', wx.TextCtrl, required=False)
         self.placeParam()
 
@@ -67,17 +61,16 @@ class ConfigValidator(wx.PyValidator):
 
     def TransferToWindow(self):
         win = self.GetWindow()
-        if not win.IsEnabled() or not pos.config.has_option(self.config, self.key):
+        if not win.IsEnabled() or pos.config[self.config, self.key] is None:
             return True
-        data = pos.config.get(self.config, self.key)
+        data = pos.config[self.config, self.key]
         win.SetValue(data)
         return True
 
     def TransferFromWindow(self):
         win = self.GetWindow()
         if not win.IsEnabled():
-            if pos.config.has_option(self.config, self.key):
-                pos.config.remove_option(self.config, self.key)
+            pos.config[self.config, self.key] = None
             return True
-        pos.config.set(self.config, self.key, win.GetValue())
+        pos.config[self.config, self.key] = win.GetValue()
         return True

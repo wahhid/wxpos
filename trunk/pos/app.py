@@ -87,7 +87,7 @@ def run(config=False):
     if config:
         print '*Running config...'
         ret = runConfig()
-    elif len(pos.config.sections()) == 0:
+    elif pos.config.empty():
         print '*First run. Running config first...'
         ret = runConfig()
         ret = ret or runApp()

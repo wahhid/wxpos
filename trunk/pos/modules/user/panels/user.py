@@ -120,9 +120,15 @@ class IndividualUserPanel(wx.Panel):
                               wx.OK)
                 return False
             elif password1 == '':
-                retCode = wx.MessageBox('Set an empty password?', 'Empty password',
-                                        wx.YES_NO | wx.ICON_QUESTION)
-                if retCode != wx.YES:
+                allow = pos.config['mod.user', 'allow_empty_passwords']
+                if bool(allow):
+                    retCode = wx.MessageBox('Set an empty password?', 'Empty password',
+                                            wx.YES_NO | wx.ICON_QUESTION)
+                    if retCode != wx.YES:
+                        return False
+                else:
+                    wx.MessageBox('Empty passwords are not allowed.', 'Empty password',
+                              wx.OK)
                     return False
             return u.update(password=password1)
         else:

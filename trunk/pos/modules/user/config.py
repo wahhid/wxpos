@@ -3,6 +3,8 @@ from pos.menu import ModuleMenuBase, MenuRoot, MenuItem
 
 dependencies = ('base',)
 
+pos.config.set_default('mod.user', 'allow_empty_passwords', '1')
+
 def load_database_objects():
     from pos.modules.user.objects.permission import Permission
     from pos.modules.user.objects.role import Role

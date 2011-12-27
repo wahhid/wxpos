@@ -1,4 +1,3 @@
-import wx
 from pos.menu import ModuleMenuBase, MenuRoot, MenuItem
 
 dependencies = tuple()
@@ -11,4 +10,6 @@ class ModuleMenu(ModuleMenuBase):
         MenuRoot(self.menu, "System", 'system')
 
     def loadSubItems(self):
-        MenuItem(self.menu, "System", "Configuration", wx.Panel, 'system')
+        from pos.modules.base.panels import MainConfigPanel
+        
+        MenuItem(self.menu, "System", "Configuration", MainConfigPanel, 'system')

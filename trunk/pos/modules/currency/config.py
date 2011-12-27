@@ -5,6 +5,8 @@ from sqlalchemy import func, Table, Column, Integer, String, Float, Boolean, Met
 
 dependencies = ('base',)
 
+pos.config.set_default('mod.currency', 'default', None)
+
 def load_database_objects():
     from pos.modules.currency.objects.currency import Currency
     from pos.modules.currency.objects.currencyunit import CurrencyUnit
