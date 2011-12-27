@@ -1,58 +1,21 @@
 import pos
-import imp, os, sys
-import pkgutil
+import os, sys
+import pkgutil, importlib
 
 class ModuleWrapper:
     def __init__(self, pkg, parent):
-        self.package = pkg
         self.name = pkg[1]
-        self.parent = parent
-        self.cfg = None
-        self.top_pathname = None
-        self.valid = None
         self.dependencies = []
 
-    def find(self):
-        if hasattr(sys, 'frozen') and sys.frozen:
-            for pkg in pkgutil.iter_modules([os.path.join(self.parent, self.package[1])]):
-                if pkg[1] == 'config':
-                    self.cfg = pkg
-                    self.valid = True
-                    break
-            else:
-                self.valid = False
-            return self.valid
-        else:
-            try:
-                _file, self.top_pathname, description = imp.find_module(self.name, [self.parent])
-            except ImportError as e:
-                self.valid = False
-                return None
-            else:
-                try:
-                    self.cfg = imp.find_module('config', [self.top_pathname])
-                except ImportError as e:
-                    self.valid = False
-                    return False
-                else:
-                    self.valid = True
-                    return True
-                return self.valid
-
     def load(self):
-        if not self.valid: return
-        if hasattr(sys, 'frozen') and sys.frozen:
-            self.top_module = self.package[0].load_module(self.package[1])
-            self.module = self.cfg[0].load_module(self.name+'.'+self.cfg[1])
-        else:
-            self.top_module = imp.load_package(self.name, self.top_pathname)
-            self.module = imp.load_module(self.name+'.config', *self.cfg)
-        self.dependencies = self.module.dependencies
+        self.top_module = importlib.import_module('pos.modules.'+self.name)
+        self.config_module = importlib.import_module('.config', 'pos.modules.'+self.name)
+        self.dependencies = self.config_module.dependencies
+        return self.top_module is not None and self.config_module is not None
 
     def load_database_objects(self):
-        if not self.valid: return
         try:
-            load = self.module.load_database_objects
+            load = self.config_module.load_database_objects
         except AttributeError:
             return False
         else:
@@ -60,7 +23,6 @@ class ModuleWrapper:
             return True
 
     def init(self):
-        if not self.valid: return
         try:
             init = self.top_module.init
         except AttributeError:
@@ -84,14 +46,12 @@ def init():
     modules = []
     for pkg in packages:
         mod = ModuleWrapper(pkg, modules_path)
-        find = mod.find()
-        if find is None:
-            print '*Invalid module', mod.name
-        elif not find:
-            print '*No config module for', mod.name
+        if not mod.load():
+            if mod.top_module is None:
+                print '*Invalid module', mod.name
+            else:
+                print '*No config module for', mod.name
         else:
-            mod.load()
-        if mod.valid:
             modules.append(mod)
     print '*(%d) modules found: %s' % (len(modules), ', '.join([m.name for m in modules]))
     checkDependencies()
@@ -103,11 +63,11 @@ def checkDependencies():
     for mod in modules:
         missing = [mod_name for mod_name in mod.dependencies if mod_name not in module_names]
         if len(missing)>0:
-            print '*** Missing dependencies for module', mod.name, ':', ' '.join(missing)
+            print '*** Missing dependencies for module', mod.name, ':', ', '.join(missing)
             raise Exception, 'Missing dependency'
 
 def isInstalled(module_name):
-    return (module_name in [mod.name for mod in modules])
+    return (module_name in (mod.name for mod in modules))
 
 def all():
     return tuple(modules)
@@ -130,7 +90,7 @@ def configTestDB():
     print '*Adding test values to database...'
     for mod in modules:
         try:
-            test = mod.module.test_database_values
+            test = mod.config_module.test_database_values
         except AttributeError:
             print '*DB Test Config missing', mod.name
         else:
@@ -143,7 +103,7 @@ def extendMenu(menu):
     items = []
     for mod in modules:
         try:
-            item = mod.module.ModuleMenu
+            item = mod.config_module.ModuleMenu
         except AttributeError:
             print '*Menu Extension missing', mod.name
         else:

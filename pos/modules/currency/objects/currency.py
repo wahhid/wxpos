@@ -37,10 +37,19 @@ class Currency(pos.database.Base, common.Item):
 
 add = common.add(Currency)
 
+default = None
 def get_default():
-    # TODO integrate it with a system that allows the user to change the default currency
+    global default
+    currency_id = pos.config['mod.currency', 'default']
+    if default is not None and currency_id == default[0]:
+        return default[1]
     session = pos.database.session()
-    return session.query(Currency).first()
+    if currency_id is not None:
+        default = (currency_id, session.query(Currency).filter_by(id=currency_id).one())
+        return default[1]
+    else:
+        default = (None, session.query(Currency).first())
+        return default[1]
 
 def convert(price, src_currency, dest_currency):
     s_val = float(src_currency.value)

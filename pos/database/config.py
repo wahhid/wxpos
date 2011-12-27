@@ -3,27 +3,22 @@ import pos
 from sqlalchemy import exc
 from sqlalchemy.engine.url import URL
 
+pos.config.set_default('db', 'used', 'sqlite')
+
+pos.config.set_default('db.sqlite', 'drivername', 'sqlite')
+pos.config.set_default('db.sqlite', 'database', 'wxpos.sqlite')
+
+pos.config.set_default('db.mysql', 'drivername', 'mysql')
+
 _url = None
 def loadconfig():
-    if not pos.config.has_section('db'):
-        setdefault()
-    config = 'db.'+pos.config.get('db', 'used')
+    config = 'db.'+pos.config['db', 'used']
     args = ('drivername', 'username', 'password', 'host', 'port', 'database', 'query')
-    kwargs = dict([(a, pos.config.get(config, a)) for a in args if pos.config.has_option(config, a)])
+    kwargs = dict([(a, pos.config[config, a]) for a in args if pos.config[config, a] is not None])
 
     global _url
     _url = URL(**kwargs)
     return _url
-
-def setdefault():
-    for section in pos.config.sections():
-        if section.startswith('db.'):
-            pos.config.remove_section(section)
-    pos.config.add_section('db')
-    pos.config.set('db', 'used', 'sqlite')
-    pos.config.add_section('db.sqlite')
-    pos.config.set('db.sqlite', 'drivername', 'sqlite')
-    pos.saveConfig()
 
 def clear():
     metadata = pos.database.Base.metadata
@@ -34,12 +29,8 @@ def create():
     metadata.create_all()
 
 def use(config_name):
-    if not pos.config.has_section('db'):
-        setdefault()
-    pos.config.set('db', 'used', config_name)
-    pos.saveConfig()
+    pos.config['db'] = {'used': config_name}
+    pos.config.save()
 
 def get_used():
-    if not pos.config.has_section('db'):
-        setdefault()
-    return pos.config.get('db', 'used')
+    return pos.config['db', 'used']
