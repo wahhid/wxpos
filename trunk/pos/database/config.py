@@ -10,6 +10,13 @@ pos.config.set_default('db.sqlite', 'database', 'wxpos.sqlite')
 
 pos.config.set_default('db.mysql', 'drivername', 'mysql')
 
+pos.config.set_default('db.postgresql', 'drivername', 'postgresql')
+
+pos.config.set_default('db.mssql', 'drivername', 'mssql')
+
+pos.config.set_default('db.firebird', 'drivername', 'firebird')
+
+
 _url = None
 def loadconfig():
     config = 'db.'+pos.config['db', 'used']

@@ -1,6 +1,9 @@
 from .manage import ManagePanel
 
-from .mysql import MySQLConfigPanel
-from .sqlite import SqliteConfigPanel
+from .dbconfig.firebird import FirebirdConfigPanel
+from .dbconfig.mssql import MsSQLConfigPanel
+from .dbconfig.postgresql import PostgreSQLConfigPanel
+from .dbconfig.mysql import MySQLConfigPanel
+from .dbconfig.sqlite import SqliteConfigPanel
 
 from .config import MainConfigPanel

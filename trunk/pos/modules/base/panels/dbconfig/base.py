@@ -2,7 +2,7 @@ import wx
 
 import pos
 
-class SqliteConfigPanel(wx.Panel):
+class DatabaseConfigPanel(wx.Panel):
     def initParam(self, config, validator):
         self.config = config
         self.validator = validator
@@ -40,12 +40,11 @@ class SqliteConfigPanel(wx.Panel):
         event.Skip()
         self.getParam(name).Enable(self.fields[name][0].IsChecked())
     
-    def __init__(self, parent):
+    def __init__(self, parent, config, validator=None):
         wx.Panel.__init__(self, parent, -1)
         
-        self.initParam('db.sqlite', ConfigValidator)
-        self.addParam('database', 'Filename', wx.TextCtrl, required=False)
-        self.placeParam()
+        val = ConfigValidator if validator is None else validator
+        self.initParam(config, val)
 
 class ConfigValidator(wx.PyValidator):
     def __init__(self, config, key):
@@ -56,7 +55,6 @@ class ConfigValidator(wx.PyValidator):
     Clone = lambda self: ConfigValidator(self.config, self.key)
 
     def Validate(self, parent):
-        win = self.GetWindow()
         return True
 
     def TransferToWindow(self):

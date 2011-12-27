@@ -4,7 +4,7 @@ import ConfigParser
 
 import pos
 
-from ..panels import MySQLConfigPanel, SqliteConfigPanel
+from ..panels import FirebirdConfigPanel, MsSQLConfigPanel, PostgreSQLConfigPanel, MySQLConfigPanel, SqliteConfigPanel
 
 class ConfigDialog(wx.Dialog):
     def addOption(self, name, label, panel):
@@ -13,11 +13,14 @@ class ConfigDialog(wx.Dialog):
         self.options[label] = name
     
     def __init_ctrls(self):
-        self.introTxt = wx.StaticText(self, -1, label='Select and configure the database system you want to use.')
+        self.introTxt = wx.StaticText(self, -1, label='Select and configure the database system you want to use. Note that wxPos will not create the database for you.')
         
         self.panelBook = wx.Choicebook(self, -1)
-        self.addOption('sqlite', 'Sqlite', SqliteConfigPanel(self.panelBook))
-        self.addOption('mysql', 'MySQL', MySQLConfigPanel(self.panelBook))
+        self.addOption('sqlite', 'Sqlite (default)', SqliteConfigPanel(self.panelBook))
+        self.addOption('mysql', 'MySQL (recommended)', MySQLConfigPanel(self.panelBook))
+        self.addOption('postgresql', 'PostgreSQL', PostgreSQLConfigPanel(self.panelBook))
+        self.addOption('mssql', 'Microsoft SQL Server', MsSQLConfigPanel(self.panelBook))
+        self.addOption('firebird', 'Firebird', FirebirdConfigPanel(self.panelBook))
         
         self.okBtn = wx.Button(self, wx.ID_OK, label='OK')
         self.okBtn.Bind(wx.EVT_BUTTON, self.OnOkButton)

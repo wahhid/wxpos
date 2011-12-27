@@ -4,10 +4,8 @@
 #########################
 
 base
-** add a common ground for ModuleConfigPanel
 
 currency
-** make sure a link to the currency is established anywhere there is a price mentioned
 
 user
 ** add a menu restriction object which links a permission to specific Menu items(parent, child). Many-to-Many-relationship.
