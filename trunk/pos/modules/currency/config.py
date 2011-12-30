@@ -1,8 +1,6 @@
 import pos
 from pos.menu import ModuleMenuBase, MenuRoot, MenuItem
 
-from sqlalchemy import func, Table, Column, Integer, String, Float, Boolean, MetaData, ForeignKey
-
 dependencies = ('base',)
 
 pos.config.set_default('mod.currency', 'default', None)
@@ -34,9 +32,6 @@ def test_database_values():
     session.commit()
 
 class ModuleMenu(ModuleMenuBase):
-    def __init__(self, menu):
-        self.menu = menu
-
     def loadSubItems(self):
         from pos.modules.currency.panels import CurrenciesPanel
         

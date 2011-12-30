@@ -4,12 +4,11 @@
 #########################
 
 base
+** make some kind of "profiles" of db configuration (e.g. one local and one online and make a sync function maybe) or simply two different mysql databases and one sqlite say...
 
 currency
 
 user
-** add a menu restriction object which links a permission to specific Menu items(parent, child). Many-to-Many-relationship.
-			Use something like select distinct to get all the menu items allowed per role/user.
 
 customers
 ** still has the address and contact tables not set up, make sure to make it up to date and arrange the panels accordingly

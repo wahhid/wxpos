@@ -34,8 +34,8 @@ def test_database_values():
 
 class ModuleMenu(ModuleMenuBase):
     def __init__(self, menu):
-        self.menu = menu
-        MenuRoot(self.menu, "Stock", 'stock')
+        ModuleMenuBase.__init__(self, menu)
+        MenuRoot(self.menu, "Stock") #perm:stock
 
     def loadSubItems(self):
         from pos.modules.stock.panels import CategoriesPanel

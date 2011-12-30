@@ -51,12 +51,9 @@ def configDB(test=False):
     """)
 
 class ModuleMenu(ModuleMenuBase):
-    def __init__(self, menu):
-        self.menu = menu
-
     def loadSubItems(self):
         from pos.modules.sales.panels import SalesPanel
         from pos.modules.sales.panels import DebtsPanel
         
-        MenuItem(self.menu, "Main", "Sales", SalesPanel, 'sales')
-        MenuItem(self.menu, "Main", "Debts", DebtsPanel, 'sales')
+        MenuItem(self.menu, "Main", "Sales", SalesPanel) #perm:sales
+        MenuItem(self.menu, "Main", "Debts", DebtsPanel) #perm:sales

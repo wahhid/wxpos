@@ -5,7 +5,7 @@ dependencies = ('base',)
 class ModuleMenu(ModuleMenuBase):
     def __init__(self, menu):
         self.menu = menu
-        MenuRoot(self.menu, "Reports", 'reports')
+        MenuRoot(self.menu, "Reports", rel=-1, priority=3)#perm:reports
 
     def loadSubItems(self):
         import pos.modules
