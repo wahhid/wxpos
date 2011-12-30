@@ -1,8 +1,6 @@
 import pos
 from pos.menu import ModuleMenuBase, MenuRoot, MenuItem
 
-from sqlalchemy import func, Table, Column, Integer, String, Float, Boolean, MetaData, ForeignKey
-
 dependencies = ('base', 'currency')
 
 def load_database_objects():
@@ -60,8 +58,8 @@ def configDB(test=False):
 
 class ModuleMenu(ModuleMenuBase):
     def __init__(self, menu):
-        self.menu = menu
-        MenuRoot(self.menu, "Customers", 'customers')
+        ModuleMenuBase.__init__(self, menu)
+        MenuRoot(self.menu, "Customers", rel=1, priority=3) #perm:customers
 
     def loadSubItems(self):
         from pos.modules.customer.panels import CustomersPanel

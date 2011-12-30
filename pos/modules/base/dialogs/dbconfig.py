@@ -1,7 +1,5 @@
 import wx
 
-import ConfigParser
-
 import pos
 
 from ..panels import FirebirdConfigPanel, MsSQLConfigPanel, PostgreSQLConfigPanel, MySQLConfigPanel, SqliteConfigPanel
@@ -43,7 +41,7 @@ class ConfigDialog(wx.Dialog):
         wx.Dialog.__init__(self, parent, -1,
               size=wx.Size(400, 500), title='Database Configuration')
         
-        dbName = pos.database.config.get_used()
+        dbName = pos.config['db', 'used']
         
         self.options = {}
         self.__init_ctrls()
