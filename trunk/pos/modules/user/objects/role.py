@@ -19,10 +19,6 @@ class Role(pos.database.Base, common.Item):
 
     permissions = relationship("Permission", secondary=role_permission_link, backref="roles")
 
-    def __init__(self, name, permissions):
-        self.name = name
-        self.permissions = permissions
-
     def isPermitted(self, permission):
         if permission is None:
             return True
@@ -31,7 +27,13 @@ class Role(pos.database.Base, common.Item):
         else:
             return (permission in self.permissions)
 
+    @hybrid_property
+    def display(self):
+        return self.name
+    
+    @display.expression
+    def display(self):
+        return self.name
+
     def __repr__(self):
         return "<Role %s>" % (self.name,)
-
-add = common.add(Role)

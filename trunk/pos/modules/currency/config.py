@@ -13,17 +13,17 @@ def test_database_values():
     from pos.modules.currency.objects.currency import Currency
     from pos.modules.currency.objects.currencyunit import CurrencyUnit
     
-    LL = Currency('Lebanese Lira', 'L.L.', 1.0, 0, True)
-    USD = Currency('U.S. Dollar', 'USD', 1500, 2, True)
-    EUR = Currency('Euro', 'EUR', 2000, 2, True)
+    LL = Currency(name='Lebanese Lira', symbol='L.L.', value=1.0, decimal_places=0, digit_grouping=True)
+    USD = Currency(name='U.S. Dollar', symbol='USD', value=1500, decimal_places=2, digit_grouping=True)
+    EUR = Currency(name='Euro', symbol='EUR', value=2000, decimal_places=2, digit_grouping=True)
 
     ll_values = [250, 500, 1000, 5000, 10000, 20000, 50000, 100000]
     usd_values = [0.01, 0.02, 0.05, 0.10, 0.20, 0.50, 1, 2, 5, 10, 20, 50, 100]
     eur_values = [0.01, 0.02, 0.05, 0.10, 0.20, 0.50, 1, 2, 5, 20, 20, 50, 100, 500]
 
-    [CurrencyUnit(v, LL) for v in ll_values]
-    [CurrencyUnit(v, USD) for v in usd_values]
-    [CurrencyUnit(v, EUR) for v in eur_values]
+    [CurrencyUnit(value=v, currency=LL) for v in ll_values]
+    [CurrencyUnit(value=v, currency=USD) for v in usd_values]
+    [CurrencyUnit(value=v, currency=EUR) for v in eur_values]
 
     session = pos.database.session()
     session.add(LL)

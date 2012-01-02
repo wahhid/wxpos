@@ -18,24 +18,24 @@ def test_database_values():
     from pos.modules.customer.objects.customer import Customer
 
     cu1 = session.query(Currency).filter_by(id=1).one()
-    cu2 = session.query(Currency).filter_by(id=1).one()
+    cu2 = session.query(Currency).filter_by(id=2).one()
     
     c1 = session.query(Customer).filter_by(id=1).one()
     
     u1 = session.query(User).filter_by(id=1).one()
 
-    t1 = Ticket(cu1, u1, None, 'Test ticket 1')
-    t2 = Ticket(cu2, None, c1, 'Test ticket 2')
+    t1 = Ticket(discount=0, currency=cu1, user=u1, customer=None, comment='Test ticket 1')
+    t2 = Ticket(discount=0.3, currency=cu2, user=u1, customer=c1, comment='Test ticket 2')
 
     from pos.modules.stock.objects.product import Product
     
     p1 = session.query(Product).filter_by(id=1).one()
 
-    tl1 = TicketLine('Ticketline 1-1', 2000, 1, False, t1, None)
-    tl2 = TicketLine('Ticketline 1-2', 4500, 1, False, t1, None)
-    tl3 = TicketLine('Ticketline 1-3 edited from p1', 5000, 2, True, t1, p1)
-    tl4 = TicketLine('Ticketline 2-1', 5, 12, False, t2, None)
-    tl5 = TicketLine('Ticketline 2-2 ewWeErRtTyYuUiIoOpP', 1.5, 12, True, t2, p1)
+    tl1 = TicketLine(description='Ticketline 1-1', sell_price=2000, amount=1, discount=0, is_edited=False, ticket=t1, product=None)
+    tl2 = TicketLine(description='Ticketline 1-2', sell_price=4500, amount=1, discount=0, is_edited=False, ticket=t1, product=None)
+    tl3 = TicketLine(description='Ticketline 1-3 edited from p1', sell_price=5000, amount=2, discount=0, is_edited=True, ticket=t1, product=p1)
+    tl4 = TicketLine(description='Ticketline 2-1', sell_price=5, amount=12, discount=0, is_edited=False, ticket=t2, product=None)
+    tl5 = TicketLine(description='Ticketline 2-2 ewWeErRtTyYuUiIoOpP', sell_price=1.5, amount=12, discount=0, is_edited=True, ticket=t2, product=p1)
 
     [session.add(tl) for tl in (tl1, tl2, tl3, tl4, tl5)]
     session.commit()

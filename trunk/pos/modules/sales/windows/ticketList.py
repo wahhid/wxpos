@@ -4,7 +4,7 @@ import wx.lib.mixins.listctrl as listmix
 import pos
 
 import pos.modules.currency.objects.currency as currency
-import pos.modules.sales.objects.ticketline as ticketline
+from pos.modules.sales.objects.ticketline import TicketLine
 
 class ListRowHighlighter(listmix.ListRowHighlighter):
     def RefreshRows(self):
@@ -14,7 +14,7 @@ class ListRowHighlighter(listmix.ListRowHighlighter):
             wx.CallAfter(listmix.ListRowHighlighter.RefreshRows, self)
 
 class TicketList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, ListRowHighlighter):
-    columns = ('Description', 'Price', 'Amount', 'Total')
+    columns = ('Description', 'Price', 'Amount', 'Discount', 'Total')
     
     def __init__(self, parent):
         wx.ListCtrl.__init__(self, parent, -1,
@@ -36,12 +36,9 @@ class TicketList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, ListRowHighlighter
     # Product to Line manipulation
     def addProductLine(self, p):
         sell_price = currency.convert(p.price, p.currency, self.ticket.currency)
-        tl = ticketline.add(description=p.name,
-                            sell_price=sell_price,
-                            amount=1,
-                            ticket=self.ticket,
-                            product=p,
-                            is_edited=False)
+        tl = TicketLine()
+        tl.update(description=p.name, sell_price=sell_price, amount=1, discount=0,
+                  ticket=self.ticket, product=p, is_edited=False)
         self.updateList(self.ticket)
         index = self.findLine(tl)
         self.Select(index, True)
@@ -97,7 +94,8 @@ class TicketList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, ListRowHighlighter
         items = [('* ' if tl.is_edited else '')+tl.description,
                  c.format(tl.sell_price),
                  'x%d' % (tl.amount,),
-                 c.format(tl.amount*tl.sell_price)]
+                 '%d%%' % (tl.discount*100,),
+                 c.format(tl.total)]
         return items
 
     def updateList(self, t, select=False):

@@ -10,6 +10,7 @@ pos.config.set_default('db.sqlite', 'drivername', 'sqlite')
 pos.config.set_default('db.sqlite', 'database', 'wxpos.sqlite')
 
 pos.config.set_default('db.mysql', 'drivername', 'mysql')
+pos.config.set_default('db.mysql', 'query', repr({'charset': 'utf8'}))
 
 pos.config.set_default('db.postgresql', 'drivername', 'postgresql')
 
@@ -24,8 +25,11 @@ def loadconfig():
     Return the URL to be used with engine creation based on configuration
     """
     config = 'db.'+pos.config['db', 'used']
-    args = ('drivername', 'username', 'password', 'host', 'port', 'database', 'query')
+    args = ('drivername', 'username', 'password', 'host', 'port', 'database')
     kwargs = dict([(a, pos.config[config, a]) for a in args if pos.config[config, a] is not None])
+    if pos.config[config, 'query'] is not None:
+        # TODO query parameters should not be saved as repr({whatever}). use something like query.param1=value1, etc.
+        kwargs['query'] = eval(pos.config[config, 'query'])
 
     global _url
     _url = URL(**kwargs)

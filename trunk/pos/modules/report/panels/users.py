@@ -10,7 +10,7 @@ class UsersReportPanel(PDFReportPanel):
     def __init__(self, parent):
         PDFReportPanel.__init__(self, parent, validator=ParamValidator, showDateRange=True)
 
-        self.catalogList = UserCatalogList(self.paramPanel)
+        self.catalogList = UserCatalogList(self.paramPanel, show_hidden=True)
         self.catalogList.SetValidator(ParamValidator(self, 'user'))
         self.paramSizer.Add(self.catalogList, 0, flag=wx.EXPAND | wx.ALL)
 
@@ -101,12 +101,7 @@ class ParamValidator(wx.PyValidator):
     def getData(self, win):
         data = None
         if self.key == 'user':
-            selected = win.GetFirstSelected()
-            item, image_id = win.getItem(selected)
-            if image_id == 1:
-                data = item
-            else:
-                data = None
+            data = win.GetValue()
         elif self.key.startswith('show_'):
             data = win.IsChecked()
         return data

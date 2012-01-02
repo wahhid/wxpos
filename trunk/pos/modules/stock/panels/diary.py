@@ -1,8 +1,9 @@
 import wx
+import sys
 
 import pos
 
-from pos.modules.stock.windows.productCatalogList import ProductCatalogList
+from pos.modules.stock.windows import ProductCatalogList
 
 class StockDiaryPanel(wx.Panel):
     def _init_sizers(self):
@@ -41,7 +42,7 @@ class StockDiaryPanel(wx.Panel):
         self.operationBox.Bind(wx.EVT_RADIOBOX, self.OnOperationRadio)
 
         self.quantityLbl = wx.StaticText(self, -1, label='Quantity')
-        self.quantitySpin = wx.SpinCtrl(self, -1, value='0', style=wx.SP_ARROW_KEYS, min=0)
+        self.quantitySpin = wx.SpinCtrl(self, -1, value='0', style=wx.SP_ARROW_KEYS, min=0, max=sys.maxint)
 
         self.editBtn = wx.Button(self, -1, label='Edit')
         self.editBtn.Bind(wx.EVT_BUTTON, self.OnEditButton)
@@ -53,7 +54,6 @@ class StockDiaryPanel(wx.Panel):
         self.cancelBtn.Bind(wx.EVT_BUTTON, self.OnCancelButton)
 
         self._init_sizers()
-
 
         self.product = None
         self.enableForm(False)
@@ -122,12 +122,7 @@ class StockDiaryPanel(wx.Panel):
 
     def OnCatalogItemSelect(self, event):
         event.Skip()
-        selected = self.catalogList.GetFirstSelected()
-        p, image_id = self.catalogList.getItem(selected)
-        if p is not None and image_id == 1:
-            self.product = p
-        else:
-            self.product = None
+        self.product = self.catalogList.GetValue()
         self.enableForm(False)
 
     def OnCatalogItemActivate(self, event):

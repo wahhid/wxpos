@@ -1,6 +1,5 @@
 import pos
 
-import pos.database
 import pos.modules.base.objects.common as common
 
 from pos.modules.stock.objects.product import Product
@@ -19,26 +18,14 @@ class Ticket(pos.database.Base, common.Item):
     payment_method = Column(Enum('cash', 'cheque', 'voucher', 'card', 'free', 'debt'), nullable=True)
     date_paid = Column(DateTime, nullable=True)
     comment = Column(String(255), nullable=True)
+    discount = Column(Float, nullable=False, default=0)
     currency_id = Column(Integer, ForeignKey('currencies.id'))
     customer_id = Column(Integer, ForeignKey('customers.id'), nullable=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
 
     currency = relationship("Currency", backref="tickets")
     customer = relationship("Customer", backref="tickets")
     user = relationship("User", backref="tickets")
-    
-    keys = ('user', 'closed', 'currency', 'customer', 'date_open',
-             'date_close', 'date_paid', 'payment_method',
-             'paid')
-
-    def __init__(self, currency, user, customer=None, comment=None):
-        self.currency = currency
-        self.customer = customer
-        self.user = user
-        self.comment = comment
-
-    def __repr__(self):
-        return "<Ticket %s>" % (self.id,)
 
     @hybrid_property
     def paid(self):
@@ -86,7 +73,16 @@ class Ticket(pos.database.Base, common.Item):
     @hybrid_property
     def total(self):
         session = pos.database.session()
-        total = session.query(func.sum(TicketLine.amount*TicketLine.sell_price)).filter(TicketLine.ticket == self).one()[0]
-        return total if total is not None else 0
-
-add = common.add(Ticket)
+        total = session.query(func.sum(TicketLine.total)).filter(TicketLine.ticket == self).one()[0]
+        return total*(1-self.discount) if total is not None else 0
+    
+    @hybrid_property
+    def display(self):
+        return 'Ticket #'+str(self.id)
+    
+    @display.expression
+    def display(self):
+        return func.concat('Ticket #', self.id)
+    
+    def __repr__(self):
+        return "<Ticket %s>" % (self.id,)

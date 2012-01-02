@@ -1,3 +1,4 @@
+from .form import FormPanel
 from .manage import ManagePanel
 
 from .dbconfig.firebird import FirebirdConfigPanel

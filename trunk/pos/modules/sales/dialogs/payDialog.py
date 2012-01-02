@@ -1,9 +1,5 @@
 import wx
 
-import warnings
-
-import pos.menu
-
 class PayDialog(wx.Dialog):
     def __init_ctrls(self, disabled):
         self.totalLbl = wx.StaticText(self, -1, label='Due Amount')
@@ -13,16 +9,15 @@ class PayDialog(wx.Dialog):
 
         self.mainToolbook = wx.Toolbook(self, -1, style=wx.BK_LEFT)
 
-        # TODO PayDialog is using pos.menu.il (a wx.ImageList)
-        warnings.warn('PayDialog is using pos.menu.il (a wx.ImageList)', stacklevel=1)
-        self.mainToolbook.AssignImageList(pos.menu.il)
+        # TODO PayDialog is not using a wx.ImageList
+        self.mainToolbook.AssignImageList(wx.ImageList(16, 16))
 
         toolbar = self.mainToolbook.GetToolBar()
         selected = None
         panels = (CashPanel, ChequePanel, CardPanel, VoucherPanel, FreePanel, DebtPanel)
         for p, panel_class in enumerate(panels):
             panel = panel_class(self.mainToolbook, self)
-            self.mainToolbook.AddPage(imageId=0, page=panel, select=False, text=panel.label)
+            self.mainToolbook.AddPage(imageId=-1, page=panel, select=False, text=panel.label)
             if not panel.IsAllowed() or panel.payment[0] in disabled:
                 toolbar.EnableTool(p+1, False)
             elif selected is None:

@@ -4,8 +4,8 @@ import pos
 
 import pos.modules.user.objects.user as user
 import pos.modules.currency.objects.currency as currency
-import pos.modules.sales.objects.ticket as ticket
-import pos.modules.sales.objects.ticketline as ticketline
+from pos.modules.sales.objects.ticket import Ticket
+from pos.modules.sales.objects.ticketline import TicketLine
 
 from pos.modules.stock.objects.product import Product
 from pos.modules.currency.objects.currency import Currency
@@ -20,12 +20,14 @@ class SalesPanel(wx.Panel):
         self.findSizer.Add(self.currencyChoice, (0, 1))
         self.findSizer.Add(self.customerLbl, (1, 0))
         self.findSizer.Add(self.customerTxt, (1, 1))
-        self.findSizer.Add(self.totalLbl, (2, 0))
-        self.findSizer.Add(self.totalTxt, (2, 1))
-        self.findSizer.Add(self.findSep, (3, 0),
+        self.findSizer.Add(self.discountLbl, (2, 0))
+        self.findSizer.Add(self.discountSpin, (2, 1))
+        self.findSizer.Add(self.totalLbl, (3, 0))
+        self.findSizer.Add(self.totalTxt, (3, 1))
+        self.findSizer.Add(self.findSep, (4, 0),
                            span=(1, 2), flag=wx.EXPAND | wx.ALL, border=3)
-        self.findSizer.Add(self.codeLbl, (4, 0))
-        self.findSizer.Add(self.codeTxt, (4, 1))
+        self.findSizer.Add(self.codeLbl, (5, 0))
+        self.findSizer.Add(self.codeTxt, (5, 1))
         self.findSizer.AddGrowableCol(1, 1)
 
         self.tlActionSizer = wx.BoxSizer(orient=wx.VERTICAL)
@@ -128,6 +130,10 @@ class SalesPanel(wx.Panel):
         self.customerLbl = wx.StaticText(self, -1, label='Customer:')
         self.customerTxt = wx.TextCtrl(self, -1, style=wx.TE_READONLY)
 
+        self.discountLbl = wx.StaticText(self, -1, label='Discount:')
+        self.discountSpin = wx.SpinCtrl(self, -1, min=0, max=100)
+        self.discountSpin.Bind(wx.EVT_TEXT, self.OnDiscountText)
+
         self.totalLbl = wx.StaticText(self, -1, label='Total:')
         self.totalTxt = wx.TextCtrl(self, -1, style=wx.TE_READONLY)
         
@@ -166,11 +172,13 @@ class SalesPanel(wx.Panel):
             self.ticketChoice.updateList()
             self.ticketList.clearLines()
             self.currencyChoice.Enable(False)
+            self.discountSpin.Enable(False)
             self.enableTicketActions(False)
         else:
             self.ticketChoice.setCurrentTicket(t)
             self.ticketList.updateList(t)
             self.currencyChoice.Enable(True)
+            self.discountSpin.Enable(True)
             self.enableTicketActions(True)
         
         self.enableTicketlineActions(False)
@@ -191,6 +199,7 @@ class SalesPanel(wx.Panel):
             def_c = currency.get_default()
             self.currencyChoice.SetStringSelection(def_c.symbol)
             self.customerTxt.SetValue('[None]')
+            self.discountSpin.SetValue(0)
             self.totalTxt.SetValue(def_c.format(0))
         else:
             tc = self.ticket.currency
@@ -200,6 +209,7 @@ class SalesPanel(wx.Panel):
                 self.customerTxt.SetValue('[None]')
             else:
                 self.customerTxt.SetValue(c.name)
+            self.discountSpin.SetValue(self.ticket.discount*100.0)
             self.totalTxt.SetValue(tc.format(self.ticket.total))
 
     ### Ticket Actions ###
@@ -218,7 +228,8 @@ class SalesPanel(wx.Panel):
     def OnNewButton(self, event):
         event.Skip()
         def_c = currency.get_default()
-        t = ticket.add(user=user.current, currency=def_c)
+        t = Ticket()
+        t.update(discount=0, user=user.current, currency=def_c)
         self.ticketChoice.updateList()
         self.setCurrentTicket(t)
 
@@ -287,12 +298,13 @@ class SalesPanel(wx.Panel):
         event.Skip()
         t = self._doCheckCurrentTicket()
         if t:
-            data = {'description': '', 'amount': 1, 'sell_price': 0, 'ticket': t,
+            data = {'description': '', 'amount': 1, 'sell_price': 0, 'discount': 0, 'ticket': t,
                     'product': None, 'is_edited': True}
             dlg = EditDialog(None, data)
             ret = dlg.ShowModal()
             if ret == wx.ID_OK:
-                tl = ticketline.add(**data)
+                tl = TicketLine()
+                tl.update(data)
                 self.ticketList.updateList(t)
                 self.updateTicketInfo()
                 index = self.ticketList.findLine(tl)
@@ -311,7 +323,7 @@ class SalesPanel(wx.Panel):
         t = self._doCheckCurrentTicket()
         tl = self._doCheckCurrentTicketline()
         if t and tl:
-            data = {'description': '', 'sell_price': 0, 'amount': 1, 'product': None}
+            data = {'description': '', 'sell_price': 0, 'amount': 1, 'discount': 0, 'product': None}
             tl.fillDict(data)
             _init_data = data.copy()
             dlg = EditDialog(None, data)
@@ -338,11 +350,12 @@ class SalesPanel(wx.Panel):
         if c is not None and image_id == 1:
             t = self._doCheckCurrentTicket()
             if t:
-                t.update(customer=c)
+                t.update(customer=c, discount=c.discount)
                 self.updateTicketInfo()
 
     ### Find Product Actions ###
     def OnCurrencyChoice(self, event):
+        event.Skip()
         t = self._doCheckCurrentTicket()
         if t:
             tc = t.currency
@@ -364,6 +377,25 @@ class SalesPanel(wx.Panel):
             self.updateTicketInfo()
             self.setCurrentTicket(t)
     
+    def OnDiscountText(self, event):
+        event.Skip()
+        value = self.discountSpin.GetValue()
+        t = self._doCheckCurrentTicket()
+        if t:
+            # This will change the discount every time the value is changed, with a delay of 800ms, this is used to prevent updating with wrong values.
+            # Use wx.EVT_KILL_FOCUS if the value should be changed only when focus is lost
+            self.totalTxt.SetValue('...')
+            wx.CallLater(500, self._doChangeDiscount, value)
+    
+    def _doChangeDiscount(self, old_value):
+        value = self.discountSpin.GetValue()
+        if old_value != value:
+            return
+        t = self._doCheckCurrentTicket()
+        if t:
+            t.update(discount=value/100.0)
+        self.updateTicketInfo()
+    
     def OnF3Command(self, event):
         event.Skip()
         self.codeTxt.SelectAll()
@@ -377,6 +409,7 @@ class SalesPanel(wx.Panel):
             p = session.query(Product).filter_by(code=code).one()
         except:
             wx.MessageBox('Product with code %s not found.' % (code,), 'No match', wx.OK)
+            pos.app.goTo('Stock', 'Products')
         else:
             t = self._doCheckCurrentTicket()
             if t:

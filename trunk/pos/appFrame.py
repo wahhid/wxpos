@@ -51,7 +51,7 @@ class AppFrame(wx.Frame):
                 self._loadCompleteMenu()
             else:
                 restrictions = [(mr.root, mr.item) for mr in user.current.menu_restrictions] 
-                for item in pos.menu.getItems():
+                for item in pos.menu.main.getItems():
                     # Filter menu items to display according to permissions
                     children = [i for i in item.children if (item.label, i.label) in restrictions]
                     # Hide empty menu root items
@@ -65,7 +65,7 @@ class AppFrame(wx.Frame):
         """
         Load the complete menu into the main toolbook, ignoring any permissions set.
         """
-        for item in pos.menu.getItems():
+        for item in pos.menu.main.getItems():
             page = self.getToolbookPage(item.children)
             self.mainToolbook.AddPage(imageId=item.image, page=page, select=False, text=item.label)
 

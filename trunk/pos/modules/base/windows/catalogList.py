@@ -32,6 +32,14 @@ class CatalogList(wx.ListCtrl):
         self.__current = None
         self.updateList(None)
 
+    def GetValue(self):
+        selected = self.GetFirstSelected()
+        item, image_id = self.getItem(selected)
+        if image_id == 1:
+            return item
+        else:
+            return None
+
     def getItem(self, index):
         if index<0:
             return None, None

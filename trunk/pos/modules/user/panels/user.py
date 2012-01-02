@@ -3,144 +3,64 @@ import wx
 import pos
 
 import pos.modules.user.objects.user as user
-from pos.modules.user.objects.role import Role
 
-VIEW_MODE, EDIT_MODE = 0, 1
+from pos.modules.base.panels import FormPanel
+from pos.modules.base.objects import validator as base_validator
+from pos.modules.base.objects.formatter import TextFormatter
 
-class IndividualUserPanel(wx.Panel):
-
+class IndividualUserPanel(FormPanel):
+    """
     def _init_sizers(self):
-        self.formSizer = wx.GridBagSizer(hgap=5, vgap=5)
-        
-        self.formSizer.Add(self.usernameLbl, (0, 0), flag=wx.EXPAND | wx.ALL)
-        self.formSizer.Add(self.usernameTxt, (0, 1))
-        
-        self.formSizer.Add(self.roleLbl, (1, 0), flag=wx.EXPAND | wx.ALL)
-        self.formSizer.Add(self.roleChoice, (1, 1))
-        
-        self.formSizer.Add(self.permissionLbl, (2, 0), flag=wx.EXPAND | wx.ALL)
-        self.formSizer.Add(self.permissionList, (2, 1), flag=wx.EXPAND | wx.ALL)
-
-        self.formSizer.Add(self.passwordCheck, (3, 0))
-        self.formSizer.Add(self.passwordSeperator, (3, 1),
-                           border=10, flag=wx.EXPAND | wx.ALL)
-
-        self.formSizer.Add(self.password1Lbl, (4, 0), flag=wx.EXPAND | wx.ALL)
-        self.formSizer.Add(self.password1Txt, (4, 1))
-        
-        self.formSizer.Add(self.password2Lbl, (5, 0), flag=wx.EXPAND | wx.ALL)
-        self.formSizer.Add(self.password2Txt, (5, 1))
-
-        self.formSizer.AddGrowableCol(1, 1)
-        
-        self.formPanel.SetSizer(self.formSizer)
-
         self.controlSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
         controls = [self.saveBtn, self.resetBtn]
         for c in controls:
             self.controlSizer.Add(c, 0, border=10, flag=wx.RIGHT)
 
-        self.mainSizer = wx.BoxSizer(orient=wx.VERTICAL)
-        self.mainSizer.AddSizer(self.controlSizer, 0)
-        self.mainSizer.Add(self.formPanel, 1, border=10, flag=wx.EXPAND | wx.ALL)
-
-        self.SetSizer(self.mainSizer)
-
     def _init_main(self):
-        self.formPanel = wx.Panel(self, -1)
-        
-        self.usernameLbl = wx.StaticText(self.formPanel, -1, label='Username')
-        self.usernameTxt = wx.TextCtrl(self.formPanel, -1)
-        
-        self.roleLbl = wx.StaticText(self.formPanel, -1, label='Role')
-        self.roleChoice = wx.Choice(self.formPanel, -1)
-        
-        self.permissionLbl = wx.StaticText(self.formPanel, -1, label='Permissions')
-        self.permissionList = wx.ListCtrl(self.formPanel, -1, style=wx.LC_LIST)
-
-        self.passwordCheck = wx.CheckBox(self.formPanel, -1, label='Change Password')
-        self.passwordCheck.Bind(wx.EVT_CHECKBOX, self.OnPasswordCheckbox)
-        
-        self.passwordSeperator = wx.StaticLine(self.formPanel, -1)
-        
-        self.password1Lbl = wx.StaticText(self.formPanel, -1, label='New Password')
-        self.password1Txt = wx.TextCtrl(self.formPanel, -1, style=wx.TE_PASSWORD)
-        
-        self.password2Lbl = wx.StaticText(self.formPanel, -1, label='Confirm Password')
-        self.password2Txt = wx.TextCtrl(self.formPanel, -1, style=wx.TE_PASSWORD)
-        
         self.saveBtn = wx.Button(self, -1, label='Save')
         self.saveBtn.Bind(wx.EVT_BUTTON, self.OnSaveButton)
 
         self.resetBtn = wx.Button(self, -1, label='Reset')
         self.resetBtn.Bind(wx.EVT_BUTTON, self.OnResetButton)
+    """
     
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1, style=wx.TAB_TRAVERSAL)
-
-        self._init_main()
-        self._init_sizers()
-
-        self.updateRoleList()
-
-        self.resetForm()
-
-    def updateRoleList(self):
-        session = pos.database.session()
-        role_names = session.query(Role.name).all()
-        self.roleChoice.SetItems([r[0] for r in role_names])
-
-    def resetForm(self):
-        u = user.current
-        r = u.role
-        self.usernameTxt.SetValue(u.username)
-        self.roleChoice.SetStringSelection(r.name)
+        FormPanel.__init__(self, parent, -1, DataValidator)
         
-        self.permissionList.ClearAll()
-        for p in r.permissions:
-            item = wx.ListItem()
-            item.SetText(p.name)
-            self.permissionList.InsertItem(item)
-
-        self.password1Txt.SetValue('')
-        self.password2Txt.SetValue('')
-
-        self.usernameTxt.Enable(False)
-        self.roleChoice.Enable(False)
-        self.passwordCheck.SetValue(False)
-        self.password1Txt.Enable(False)
-        self.password2Txt.Enable(False)
-
+        self.createField('Username', wx.TextCtrl, 'username', '', formatter=TextFormatter(required=True))
+        self.createField('Role', wx.TextCtrl, 'role', None)
+        self.createField(None, wx.CheckBox, 'passwordCheck', False,
+                         label='Change Password')
+        self.getField('passwordCheck').Bind(wx.EVT_CHECKBOX, self.OnPasswordCheckbox)
+        self.createField('Password', wx.TextCtrl, 'password1', '',
+                         style=wx.TE_PASSWORD)
+        self.createField('Confirm Password', wx.TextCtrl, 'password2', '',
+                         style=wx.TE_PASSWORD)
+        self._init_fields()
+        
+        data = {'username': user.current.username, 'role': user.current.role}
+        self.fillForm(data=data)
+    
+    """
+    def resetForm(self):
+        user.current.fillDict(self.__data)
+        FormPanel.resetForm(self)
+    """
+    
     def updateUser(self):
-        if self.passwordCheck.IsChecked():
-            u = user.current
-            password1, password2 = self.password1Txt.GetValue(), self.password2Txt.GetValue()
-            if password1 != password2:
-                wx.MessageBox('Passwords do not match', 'User Management',
-                              wx.OK)
-                return False
-            elif password1 == '':
-                allow = pos.config['mod.user', 'allow_empty_passwords']
-                if bool(allow):
-                    retCode = wx.MessageBox('Set an empty password?', 'Empty password',
-                                            wx.YES_NO | wx.ICON_QUESTION)
-                    if retCode != wx.YES:
-                        return False
-                else:
-                    wx.MessageBox('Empty passwords are not allowed.', 'Empty password',
-                              wx.OK)
-                    return False
-            return u.update(password=password1)
-        else:
-            return True
+        user.current.update(password=self.data['password1'])
 
     def OnPasswordCheckbox(self, event):
-        enable_password = self.passwordCheck.IsChecked()
-        self.password1Txt.Enable(enable_password)
-        self.password2Txt.Enable(enable_password)
+        enable_password = self.getField('passwordCheck').IsChecked()
+        self.getField('password1').Enable(enable_password)
+        self.getField('password2').Enable(enable_password)
         event.Skip()
 
     def OnSaveButton(self, event):
+        if not self.Validate():
+            wx.MessageBox('The form contains some invalid fields.\nCannot save changes.', 'Error', wx.OK)
+            return
+        self.formPanel.TransferDataFromWindow()
         if self.updateUser():
             self.resetForm()
         event.Skip()
@@ -148,3 +68,42 @@ class IndividualUserPanel(wx.Panel):
     def OnResetButton(self, event):
         self.resetForm()
         event.Skip()
+
+class DataValidator(base_validator.BaseValidator):
+    def GetWindowData(self):
+        win = self.GetWindow()
+        if self.key in ('password1', 'password2', 'passwordCheck'):
+            return win.GetValue()
+    
+    def ValidateWindowData(self, data):
+        if self.key in ('password1', 'password2') and self.data['passwordCheck']:
+            if self.data['password1'] != data['password2']:
+                wx.MessageBox('Passwords do not match', 'Error',
+                              wx.OK)
+                return False
+            elif self.data['password1'] == '':
+                allow = pos.config['mod.user', 'allow_empty_passwords']
+                if bool(allow):
+                    retCode = wx.MessageBox('Set an empty password?', 'Empty password?',
+                                            wx.YES_NO | wx.ICON_QUESTION)
+                    if retCode != wx.YES:
+                        return False
+                else:
+                    wx.MessageBox('Empty passwords are not allowed.', 'Error',
+                              wx.OK)
+                    return False
+        return True
+    
+    def SetWindowData(self, data):
+        win = self.GetWindow()
+        if self.key == 'username':
+            win.Enable(False)
+            win.SetValue(data)
+        elif self.key == 'role':
+            win.Enable(False)
+            if data is not None:
+                win.SetValue(data.display)
+        elif self.key in ('password1', 'password2'):
+            win.SetValue('')
+        elif self.key == 'passwordCheck':
+            win.SetValue(data)

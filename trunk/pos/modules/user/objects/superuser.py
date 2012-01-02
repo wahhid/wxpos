@@ -7,8 +7,11 @@ class SuperUser:
         self.encoded_password = ''
         self.password = ''
         self.role = SuperRole()
+        
+        self.display = '_superuser_'
 
     def login(self, password):
+        # TODO the superuser password should not be hard-coded
         return (password == '_superuser_')
 
     def fillDict(self, D):
@@ -29,9 +32,11 @@ class SuperRole:
         self.id = -1
         self.name = '_superrole_'
         self.permissions = []
+        
+        self.display = '_superrole_'
 
     def isPermitted(self, permission):
         return True
 
     def __repr__(self):
-        return "<Role %s>" % (self.name,)
+        return "<SuperRole %s>" % (self.name,)
