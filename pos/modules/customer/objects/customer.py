@@ -26,6 +26,7 @@ class Customer(pos.database.Base, common.Item):
     code = Column(String(255), nullable=True, unique=True)
     first_name = Column(String(255), nullable=True)
     last_name = Column(String(255), nullable=True)
+    discount = Column(Float, nullable=False, default=0)
     max_debt = Column(Float, nullable=True)
     currency_id = Column(Integer, ForeignKey('currencies.id'))
     comment = Column(String(255), nullable=True)
@@ -33,26 +34,10 @@ class Customer(pos.database.Base, common.Item):
     groups = relationship("CustomerGroup", secondary=customer_group_link, backref="customers")
     currency = relationship("Currency", backref="customers")
 
-    keys = ('name', 'code', 'first_name', 'last_name',
-                 'max_debt', 'currency', 'comment', 'groups')
-
-    def __init__(self, name, code, first_name, last_name, max_debt, currency, comment, groups):
-        self.name = name
-        self.code = code
-        self.first_name = first_name
-        self.last_name = last_name
-        self.max_debt = max_debt
-        self.currency = currency
-        self.comment = comment
-        self.groups = groups
-
-    def __repr__(self):
-        return "<Customer %s>" % (self.name)
-
     @hybrid_property
     def debt(self):
         session = pos.database.session()
-        qry = session.query(func.sum(TicketLine.amount*TicketLine.sell_price), Currency) \
+        qry = session.query(func.sum(TicketLine.total), Currency) \
                              .filter((TicketLine.ticket_id == Ticket.id) & \
                                      (Ticket.customer == self) & \
                                      (Ticket.currency_id == Currency.id) & \
@@ -62,4 +47,13 @@ class Customer(pos.database.Base, common.Item):
         total = sum(currency.convert(c_total, c, self.currency) for c_total, c in qry.all())
         return total
 
-add = common.add(Customer)
+    @hybrid_property
+    def display(self):
+        return self.name
+    
+    @display.expression
+    def display(self):
+        return self.name
+
+    def __repr__(self):
+        return "<Customer %s>" % (self.name,)

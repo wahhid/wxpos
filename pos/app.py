@@ -19,6 +19,26 @@ print '*Importing modules...'
 import pos.modules
 pos.modules.init()
 
+def goTo(root, item=None):
+    root_index, item_index = 0, 0
+    mainToolbook = app.main.mainToolbook
+    for i in xrange(mainToolbook.GetPageCount()):
+        if mainToolbook.GetPageText(i) == root:
+            root_index = i
+            break
+    else:
+        return
+    root_page = mainToolbook.GetPage(root_index)
+    mainToolbook.SetSelection(root_index)
+    if isinstance(root_page, wx.Toolbook) and item is not None:
+        for i in xrange(root_page.GetPageCount()):
+            if root_page.GetPageText(i) == item:
+                item_index = i
+                break
+        else:
+            return
+        root_page.SetSelection(item_index)
+
 def runApp():
     """
     Run application in normal mode.
@@ -38,7 +58,7 @@ def runApp():
     
     print '*Extending menu...'
     # Load appropriate menu items from all the modules
-    pos.modules.extendMenu(pos.menu.menu)
+    pos.modules.extendMenu(pos.menu.main)
     print '*Loading menu...'
     # Create the image list once the wx.App is created and the menu fully extended
     pos.menu.load()
@@ -49,11 +69,11 @@ def runApp():
         if init is not None and not init:
             print '*Initiating module', mod.name, 'failed.'
             return False
-    main = AppFrame(None)
-    main.loadMenu()
+    app.main = AppFrame(None)
+    app.main.loadMenu()
     print '*Done.'
-    app.SetTopWindow(main)
-    main.Show()
+    app.SetTopWindow(app.main)
+    app.main.Show()
     return True
 
 def runConfig():

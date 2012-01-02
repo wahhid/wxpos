@@ -19,13 +19,21 @@ class DiaryEntry(pos.database.Base, common.Item):
 
     keys = ('operation', 'quantity', 'date', 'product')
 
-    def __init__(self, operation, quantity, product):
-        self.operation = operation
-        self.quantity = quantity
-        self.product = product
+    def __init__(self, *args, **kwargs):
+        # Entry Date cannot be changed
+        if 'date' in kwargs:
+            del kwargs['date']
+        pos.database.Base.__init__(self, *args, **kwargs)
+
+    @hybrid_property
+    def display(self):
+        # TODO arrange the display function, is it unique?
+        return str(self.quantity)+self.operation+'/'+self.product.name
+    
+    @display.expression
+    def display(self):
+        return func.concat(self.quantity, self.operation, '/', self.product.name)
 
     def __repr__(self):
         return "<DiaryEntry %d %s of %s on %s>" % \
                (self.quantity, self.operation, self.product, self.date)
-
-add = common.add(DiaryEntry)

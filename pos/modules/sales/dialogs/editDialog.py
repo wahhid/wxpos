@@ -1,4 +1,5 @@
 import wx
+import sys
 
 class EditDialog(wx.Dialog):
     def __init_ctrls(self):
@@ -11,8 +12,12 @@ class EditDialog(wx.Dialog):
         self.sellPriceTxt.SetValidator(EditValidator(self, 'sell_price'))
         
         self.amountLbl = wx.StaticText(self, -1, label='Amount')
-        self.amountSpin = wx.SpinCtrl(self, -1, style=wx.SP_ARROW_KEYS, min=1)
+        self.amountSpin = wx.SpinCtrl(self, -1, style=wx.SP_ARROW_KEYS, min=1, max=sys.maxint)
         self.amountSpin.SetValidator(EditValidator(self, 'amount'))
+        
+        self.discountLbl = wx.StaticText(self, -1, label='Discount')
+        self.discountSpin = wx.SpinCtrl(self, -1, style=wx.SP_ARROW_KEYS, min=0, max=100)
+        self.discountSpin.SetValidator(EditValidator(self, 'discount'))
 
         self.productLbl = wx.StaticText(self, -1, label='Product')
         self.productTxt = wx.TextCtrl(self, -1, style=wx.TE_READONLY)
@@ -29,6 +34,7 @@ class EditDialog(wx.Dialog):
         fields = [(self.descriptionLbl, self.descriptionTxt),
                   (self.sellPriceLbl, self.sellPriceTxt),
                   (self.amountLbl, self.amountSpin),
+                  (self.discountLbl, self.discountSpin),
                   (self.productLbl, self.productTxt),
                   (self.maxLbl, self.maxTxt)]
         for row, f in enumerate(fields):
@@ -50,8 +56,7 @@ class EditDialog(wx.Dialog):
         self.mainSizer.Fit(self)
     
     def __init__(self, parent, data):
-        wx.Dialog.__init__(self, parent, -1,
-              size=wx.Size(400, 500), title='Edit ticketline')
+        wx.Dialog.__init__(self, parent, -1, size=wx.Size(400, 500), title='Edit ticketline')
 
         self.data = data
         self.__init_ctrls()
@@ -95,6 +100,8 @@ class EditValidator(wx.PyValidator):
                 win.SetValue(str(data))
             elif self.key == 'amount':
                 win.SetValue(data)
+            elif self.key == 'discount':
+                win.SetValue(data*100.0)
         except:
             print '-- ERROR -- in EditValidator.TransferToWindow'
             print '--', self.key, self.dialog.data
@@ -110,6 +117,8 @@ class EditValidator(wx.PyValidator):
                 data = float(win.GetValue())
             elif self.key == 'amount':
                 data = win.GetValue()
+            elif self.key == 'discount':
+                data = win.GetValue()/100.0
             self.dialog.data[self.key] = data
         except:
             print '-- ERROR -- in EditValidator.TransferFromWindow'

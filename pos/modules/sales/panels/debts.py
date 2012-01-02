@@ -74,12 +74,8 @@ class DebtsPanel(wx.Panel):
 
     def OnCustomerCatalogItemActivate(self, event):
         event.Skip()
-        selected = self.customerList.GetFirstSelected()
-        c, image_id = self.customerList.getItem(selected)
-        if c is not None and image_id == 1:
-            self.setCustomer(c)
-        else:
-            self.setCustomer(None)
+        c = self.customerList.GetValue()
+        self.setCustomer(c)
 
     def OnPayButton(self, event):
         event.Skip()

@@ -1,7 +1,7 @@
 import pos
 
 import pos.modules.base.objects.common as common
-import pos.modules.stock.objects.diary as diary
+from pos.modules.stock.objects.diary import DiaryEntry
 
 from sqlalchemy import func, Table, Column, Integer, String, Float, Boolean, MetaData, ForeignKey
 from sqlalchemy.orm import relationship, backref
@@ -13,8 +13,8 @@ class Product(pos.database.Base, common.Item):
     id = Column(Integer, primary_key=True)
     name = Column(String(255), nullable=False, unique=True)
     description = Column(String(255), nullable=False, default='')
-    reference = Column(String(255), nullable=False, default='', unique=True)
-    code = Column(String(255), nullable=False, default='', unique=True)
+    reference = Column(String(255), nullable=True, unique=True)
+    code = Column(String(255), nullable=True, unique=True)
     price = Column(Float, nullable=False, default=0)
     currency_id = Column(Integer, ForeignKey('currencies.id'))
     _quantity = Column('quantity', Integer, nullable=True, default=None)
@@ -23,19 +23,25 @@ class Product(pos.database.Base, common.Item):
     category = relationship("Category", backref="products")
     currency = relationship("Currency", backref="products")
 
-    keys = ('name', 'description', 'reference', 'code',
-             'price', 'currency', 'quantity', 'category',
-             'in_stock')
+    def __init__(self, *args, **kwargs):
+        q = None
+        if 'quantity' in kwargs:
+            q = kwargs['quantity']
+            del kwargs['quantity']
+        if 'in_stock' in kwargs:
+            if not kwargs['in_stock']:
+                q = None
+            del kwargs['in_stock']
+        kwargs['_quantity'] = q
+        pos.database.Base.__init__(self, *args, **kwargs)
 
-    def __init__(self, name, description, reference, code, price, currency, quantity, category, in_stock=True):
-        self.name = name
-        self.description = description
-        self.reference = reference
-        self.code = code
-        self.price = price
-        self.currency = currency
-        self._quantity = quantity if in_stock else None
-        self.category = category
+    @hybrid_property
+    def display(self):
+        return self.name
+    
+    @display.expression
+    def display(self):
+        return self.name
 
     def __repr__(self):
         return "<Product %s>" % (self.name,)
@@ -59,21 +65,26 @@ class Product(pos.database.Base, common.Item):
     def quantity(self):
         return self._quantity
 
+    @quantity.expression
+    def quantity(self):
+        return self._quantity
+
     @quantity.setter
     def quantity(self, value):
         self._quantity = value
-        diary.add(operation='edit', quantity=value, product=self)
+        d = DiaryEntry()
+        d.update(operation='edit', quantity=value, product=self)
 
     def quantity_in(self, value):
         if self._quantity is None:
             return
         self._quantity += value
-        diary.add(operation='in', quantity=value, product=self)
+        d = DiaryEntry()
+        d.update(operation='in', quantity=value, product=self)
 
     def quantity_out(self, value):
         if self._quantity is None:
             return
         self._quantity -= value
-        diary.add(operation='out', quantity=value, product=self)
-
-add = common.add(Product)
+        d = DiaryEntry()
+        d.update(operation='out', quantity=value, product=self)

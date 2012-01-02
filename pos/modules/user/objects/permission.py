@@ -4,6 +4,7 @@ import pos.modules.base.objects.common as common
 
 from sqlalchemy import func, Table, Column, Integer, String, Float, Boolean, MetaData, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method, Comparator
 
 permission_restriction_link = Table('permission_restriction', pos.database.Base.metadata,
     Column('permission_id', Integer, ForeignKey('permissions.id'), primary_key=True),
@@ -20,11 +21,13 @@ class MenuRestriction(pos.database.Base, common.Item):
     root = Column(String(255), nullable=False)
     item = Column(String(255), nullable=False)
 
-    keys = ('root', 'item')
+    @hybrid_property
+    def display(self):
+        return self.root+'.'+self.item
     
-    #def __init__(self, root, item):
-        #self.root = root
-        #self.item = item
+    @display.expression
+    def display(self):
+        return func.concat(self.root, '.', self.item)
 
     def __repr__(self):
         return "<MenuRestriction %s.%s>" % (self.root, self.item)
@@ -38,14 +41,13 @@ class Permission(pos.database.Base, common.Item):
 
     menu_restrictions = relationship("MenuRestriction", secondary=permission_restriction_link, backref="permissions")
 
-    keys = ('name', 'description', 'menu_restrictions')
+    @hybrid_property
+    def display(self):
+        return self.name
     
-    def __init__(self, name, description, menu_restrictions):
-        self.name = name
-        self.description = description
-        self.menu_restrictions = menu_restrictions
+    @display.expression
+    def display(self):
+        return self.name
 
     def __repr__(self):
         return "<Permission %s>" % (self.name,)
-
-add = common.add(Permission)

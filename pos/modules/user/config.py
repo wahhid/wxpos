@@ -26,19 +26,19 @@ def test_database_values():
         ('customers', 'Manage customers.', [mr('Customers', 'Customers'), mr('Customers', 'Groups')]),
         ('reports', 'View and print reports.', [mr('Reports', 'Sales'), mr('Reports', 'Customers'), mr('Reports', 'Stock'), mr('Reports', 'Stock Diary'), mr('Reports', 'Users')]),
         ('system', 'Edit system settings.', [mr('System', 'Configuration'), mr('System', 'Currencies')])]
-    permissions = [Permission(p[0], p[1], p[2]) for p in permissions_text]
+    permissions = [Permission(name=p[0], description=p[1], menu_restrictions=p[2]) for p in permissions_text]
 
     admin_permissions = map(lambda p: permissions[p], range(len(permissions)))
     manager_permissions = map(lambda p: permissions[p], [0, 2, 3, 4, 5, 6])
     employee_permissions = map(lambda p: permissions[p], [0, 2])
 
-    admin_role = Role('admin', admin_permissions)
-    manager_role = Role('manager', manager_permissions)
-    employee_role = Role('employee', employee_permissions)
+    admin_role = Role(name='admin', permissions=admin_permissions)
+    manager_role = Role(name='manager', permissions=manager_permissions)
+    employee_role = Role(name='employee', permissions=employee_permissions)
 
-    admin_user = User('Admin', 'admin', admin_role)
-    manager_user = User('Manager', 'manager', manager_role)
-    employee_user = User('Employee', 'employee', employee_role)
+    admin_user = User(username='Admin', password='admin', role=admin_role)
+    manager_user = User(username='Manager', password='manager', role=manager_role)
+    employee_user = User(username='Employee', password='employee', role=employee_role)
 
     session = pos.database.session()
     session.add(admin_user)
@@ -49,7 +49,7 @@ def test_database_values():
 class ModuleMenu(ModuleMenuBase):
     def __init__(self, menu):
         ModuleMenuBase.__init__(self, menu)
-        MenuRoot(self.menu, "Users", rel=-2, priority=3) #perm:users
+        MenuRoot(self.menu, "Users", rel=-2, priority=3)
 
     def loadSubItems(self):
         from pos.modules.user.panels import UsersPanel

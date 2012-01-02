@@ -4,6 +4,7 @@ import pos.modules.base.objects.common as common
 
 from sqlalchemy import func, Table, Column, Integer, String, Float, Boolean, MetaData, ForeignKey
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method, Comparator
 
 class Currency(pos.database.Base, common.Item):
     __tablename__ = 'currencies'
@@ -15,15 +16,13 @@ class Currency(pos.database.Base, common.Item):
     decimal_places = Column(Integer, nullable=False, default=2)
     digit_grouping = Column(Boolean, default=False)
 
-    keys = ('name', 'symbol', 'value',
-                 'decimal_places', 'digit_grouping')
-
-    def __init__(self, name, symbol, value, decimal_places, digit_grouping):
-        self.name = name
-        self.symbol = symbol
-        self.value = value
-        self.decimal_places = decimal_places
-        self.digit_grouping = digit_grouping
+    @hybrid_property
+    def display(self):
+        return self.name
+    
+    @display.expression
+    def display(self):
+        return self.name
 
     def __repr__(self):
         return "<Currency %s>" % (self.symbol,)
@@ -34,8 +33,6 @@ class Currency(pos.database.Base, common.Item):
 
     def format(self, value):
         return '%s %s' % (format(round(value, max(0, self.decimal_places)), self.getFormatString()), self.symbol)
-
-add = common.add(Currency)
 
 default = None
 def get_default():

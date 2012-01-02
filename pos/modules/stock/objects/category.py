@@ -4,6 +4,7 @@ import pos.modules.base.objects.common as common
 
 from sqlalchemy import func, Table, Column, Integer, String, Float, Boolean, MetaData, ForeignKey
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method, Comparator
 
 class Category(pos.database.Base, common.Item):
     __tablename__ = 'categories'
@@ -14,13 +15,13 @@ class Category(pos.database.Base, common.Item):
 
     parent = relationship("Category", backref="children", remote_side=[id])
 
-    keys = ('name', 'parent')
-
-    def __init__(self, name, parent):
-        self.name = name
-        self.parent = parent
+    @hybrid_property
+    def display(self):
+        return self.name
+    
+    @display.expression
+    def display(self):
+        return self.name
 
     def __repr__(self):
         return "<Category %s>" % (self.name,)
-
-add = common.add(Category)

@@ -124,6 +124,7 @@ class TicketlistPDFReport(PDFReport):
             tc = t.currency
             tls = t.ticketlines
             for tl in tls:
+                # TODO add discount
                 data.append([tl.description,
                              tc.format(tl.sell_price),
                              'x%d' % (tl.amount,),

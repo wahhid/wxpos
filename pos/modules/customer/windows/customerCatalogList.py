@@ -1,7 +1,7 @@
 import pos
 
 from pos.modules.customer.objects.customer import Customer
-from pos.modules.customer.objects.customergroup import CustomerGroup
+from pos.modules.customer.objects.group import CustomerGroup
 
 from pos.modules.base.windows.catalogList import CatalogList
 

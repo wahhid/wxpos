@@ -5,7 +5,7 @@ from .item import MenuItem
 from .menu import Menu
 from .module import ModuleMenuBase
 
-menu = None
+main = None
 il = None
 
 def _loadImage(item):
@@ -27,24 +27,16 @@ def init():
     """
     Create the main Menu instance to be used in the main frame.
     """
-    global menu
-    menu = Menu()
+    global main
+    main = Menu()
 
 def load():
     """
     Load the complete image list of the menu.
     """
-    global menu, il
+    global main, il
     il = wx.ImageList(24, 24, True)
-    for item in menu.items.itervalues():
+    for item in main.items.itervalues():
         for child in item.children:
             _loadImage(child)
         _loadImage(item)
-
-def getItems():
-    """
-    Return all the items of the main Menu instance.
-    TODO Change that wherever it is used to directly get it from the Menu instance itself. 
-    """
-    global menu
-    return menu.getItems()

@@ -1,6 +1,6 @@
 import wx
 
-from pos.modules.customer.windows.customerCatalogList import CustomerCatalogList
+from pos.modules.customer.windows import CustomerCatalogList
 
 from .pdf import PDFReportPanel
 import pos.modules.report.objects.customers as customers_report
@@ -101,12 +101,7 @@ class ParamValidator(wx.PyValidator):
     def getData(self, win):
         data = None
         if self.key == 'customer':
-            selected = win.GetFirstSelected()
-            item, image_id = win.getItem(selected)
-            if image_id == 1:
-                data = item
-            else:
-                data = None
+            data = win.GetValue()
         elif self.key.startswith('show_'):
             data = win.IsChecked()
         return data
