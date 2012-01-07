@@ -1,9 +1,7 @@
 import wx
 
-import pos
-
-from pos.modules.customer.windows.customerCatalogList import CustomerCatalogList
-from pos.modules.stock.windows.productCatalogList import ProductCatalogList
+from pos.modules.customer.windows import CustomerCatalog
+from pos.modules.stock.windows import ProductCatalog
 
 class CatalogBook(wx.Toolbook):
     def __init__(self, parent):
@@ -15,8 +13,8 @@ class CatalogBook(wx.Toolbook):
         il.Add(bmp)
         self.AssignImageList(il)
         
-        self.productList = ProductCatalogList(self, show_only_in_stock=False)
-        self.AddPage(imageId=0, page=self.productList, text='Products')
+        self.products = ProductCatalog(self, show_only_in_stock=False)
+        self.AddPage(imageId=0, page=self.products, text='Products')
         
-        self.customerList = CustomerCatalogList(self)
-        self.AddPage(imageId=0, page=self.customerList, text='Customers')
+        self.customers = CustomerCatalog(self)
+        self.AddPage(imageId=0, page=self.customers, text='Customers')

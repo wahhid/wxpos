@@ -3,16 +3,10 @@ import wx
 import pos
 
 class DatabaseConfigPanel(wx.Panel):
-    def initParam(self, config, validator):
-        self.config = config
-        self.validator = validator
-        self.fields = {}
-        self.field_order = []
-    
     def addParam(self, name, label, wxObj, required=False, style=None):
         self.field_order.append(name)
         self.fields[name] = [None, None, None]
-        enabled = required or pos.config[self.config, name] is not None
+        enabled = required
         
         self.fields[name][0] = wx.CheckBox(self, -1)
         self.fields[name][0].Bind(wx.EVT_CHECKBOX, lambda evt, n=name: self.OnCheckBox(evt, n))
@@ -23,7 +17,7 @@ class DatabaseConfigPanel(wx.Panel):
             self.fields[name][2] = wxObj(self, -1, style=style)
         else:
             self.fields[name][2] = wxObj(self, -1)
-        self.fields[name][2].SetValidator(self.validator(self.config, name))
+        self.fields[name][2].SetValidator(self.validator(self, name))
         self.fields[name][2].Enable(enabled)
         
     def getParam(self, name):
@@ -40,35 +34,41 @@ class DatabaseConfigPanel(wx.Panel):
         event.Skip()
         self.getParam(name).Enable(self.fields[name][0].IsChecked())
     
-    def __init__(self, parent, config, validator=None):
+    def __init__(self, parent, getProfile, validator=None):
         wx.Panel.__init__(self, parent, -1)
         
-        val = ConfigValidator if validator is None else validator
-        self.initParam(config, val)
+        self.getProfile = getProfile
+        self.validator = ConfigValidator if validator is None else validator
+        self.fields = {}
+        self.field_order = []
 
 class ConfigValidator(wx.PyValidator):
-    def __init__(self, config, key):
+    def __init__(self, panel, key):
         wx.PyValidator.__init__(self)
         self.key = key
-        self.config = config
+        self.panel = panel
 
-    Clone = lambda self: ConfigValidator(self.config, self.key)
+    Clone = lambda self: ConfigValidator(self.panel, self.key)
 
     def Validate(self, parent):
         return True
 
     def TransferToWindow(self):
         win = self.GetWindow()
-        if not win.IsEnabled() or pos.config[self.config, self.key] is None:
-            return True
-        data = pos.config[self.config, self.key]
-        win.SetValue(data)
+        profile = self.panel.getProfile()
+        data = pos.config['db.'+profile, self.key]
+        
+        win.Enable(self.panel.fields[self.key][0].IsChecked() or data is not None)
+        self.panel.fields[self.key][0].SetValue(data is not None)
+        win.SetValue(data if data is not None else '')
         return True
 
     def TransferFromWindow(self):
         win = self.GetWindow()
-        if not win.IsEnabled():
-            pos.config[self.config, self.key] = None
-            return True
-        pos.config[self.config, self.key] = win.GetValue()
+        profile = self.panel.getProfile()
+        
+        if not self.panel.fields[self.key][0].IsChecked():
+            pos.config['db.'+profile, self.key] = None
+        else:
+            pos.config['db.'+profile, self.key] = win.GetValue()
         return True

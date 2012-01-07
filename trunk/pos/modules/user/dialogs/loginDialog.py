@@ -8,7 +8,7 @@ import pos.modules.user.objects.user as user
 from pos.modules.user.objects.superuser import SuperUser
 from pos.modules.user.objects.user import User
 
-from pos.modules.user.windows import UserCatalogList
+from pos.modules.user.windows import UserCatalog
 
 class LoginDialog(wx.Dialog):
     def __init_ctrls(self):
@@ -16,7 +16,7 @@ class LoginDialog(wx.Dialog):
 
         # User
         self.userLbl = wx.StaticText(self.panel, -1, label='User')
-        self.userList = UserCatalogList(self.panel)
+        self.userList = UserCatalog(self.panel, show_all_item=False)
         self.userList.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnUserListActivate)
         
         # Password

@@ -1,1 +1,1 @@
-from .productCatalogList import ProductCatalogList
+from .productCatalog import ProductCatalog

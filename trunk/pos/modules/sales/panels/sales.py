@@ -144,8 +144,8 @@ class SalesPanel(wx.Panel):
 
         ### Catalog ###
         self.catalogBook = CatalogBook(self)
-        self.catalogBook.productList.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnProductCatalogItemActivate)
-        self.catalogBook.customerList.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnCustomerCatalogItemActivate)
+        self.catalogBook.products.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnProductCatalogItemActivate)
+        self.catalogBook.customers.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnCustomerCatalogItemActivate)
     
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1, style=wx.TAB_TRAVERSAL)
@@ -335,9 +335,8 @@ class SalesPanel(wx.Panel):
     ### Catalog Actions ###
     def OnProductCatalogItemActivate(self, event):
         event.Skip()
-        selected = self.catalogBook.productList.GetFirstSelected()
-        p, image_id = self.catalogBook.productList.getItem(selected)
-        if p is not None and image_id == 1:
+        p = self.catalogBook.products.GetValue()
+        if p is not None:
             t = self._doCheckCurrentTicket()
             if t:
                 self.ticketList.addProductLine(p)
@@ -345,9 +344,8 @@ class SalesPanel(wx.Panel):
 
     def OnCustomerCatalogItemActivate(self, event):
         event.Skip()
-        selected = self.catalogBook.customerList.GetFirstSelected()
-        c, image_id = self.catalogBook.customerList.getItem(selected)
-        if c is not None and image_id == 1:
+        c = self.catalogBook.customers.GetValue()
+        if c is not None:
             t = self._doCheckCurrentTicket()
             if t:
                 t.update(customer=c, discount=c.discount)

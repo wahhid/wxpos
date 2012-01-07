@@ -3,7 +3,7 @@ import sys
 
 import pos
 
-from pos.modules.stock.windows import ProductCatalogList
+from pos.modules.stock.windows import ProductCatalog
 
 class StockDiaryPanel(wx.Panel):
     def _init_sizers(self):
@@ -32,7 +32,7 @@ class StockDiaryPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1, style=wx.TAB_TRAVERSAL)
         
-        self.catalogList = ProductCatalogList(self, show_only_in_stock=True)
+        self.catalogList = ProductCatalog(self, show_only_in_stock=True)
         self.catalogList.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnCatalogItemSelect)
         self.catalogList.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.OnCatalogItemDeselect)
         self.catalogList.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnCatalogItemActivate)

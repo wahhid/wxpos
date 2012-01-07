@@ -1,6 +1,6 @@
 import wx
 
-from pos.modules.user.windows import UserCatalogList
+from pos.modules.user.windows import UserCatalog
 
 from .pdf import PDFReportPanel
 import pos.modules.report.objects.users as users_report
@@ -10,7 +10,7 @@ class UsersReportPanel(PDFReportPanel):
     def __init__(self, parent):
         PDFReportPanel.__init__(self, parent, validator=ParamValidator, showDateRange=True)
 
-        self.catalogList = UserCatalogList(self.paramPanel, show_hidden=True)
+        self.catalogList = UserCatalog(self.paramPanel, show_hidden=True)
         self.catalogList.SetValidator(ParamValidator(self, 'user'))
         self.paramSizer.Add(self.catalogList, 0, flag=wx.EXPAND | wx.ALL)
 

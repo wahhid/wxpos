@@ -4,7 +4,6 @@
 #########################
 
 base
-** make some kind of "profiles" of db configuration (e.g. one local and one online and make a sync function maybe) or simply two different mysql databases and one sqlite say...
 
 currency
 
@@ -19,6 +18,7 @@ sales
 ** should i add 2 total columns one with discount one without?
 ** if no payment method is allowed, the first one is enabled by default. this is a bug not a feature.
 ** numbering of tickets: 123874773887 is not readable. something like 2012-12-45 is.
+	one way is to use base 36 (0-9a-z) meaning 37 becomes 10 and 36 -> Z, 35 -> Y, ...
 ** transfer of old tickets to older tables. use the same principle as used for "soft deletion" (with 3 tables and ForeignKeys)
 ** Print functionality
 ** Cash drawer functionality

@@ -3,12 +3,15 @@ import pos
 from pos.modules.customer.objects.customer import Customer
 from pos.modules.customer.objects.group import CustomerGroup
 
-from pos.modules.base.windows.catalogList import CatalogList
+from pos.modules.base.windows import Catalog
 
-class CustomerCatalogList(CatalogList):
-    def getAll(self):
+class CustomerCatalog(Catalog):
+    def getAll(self, search=None):
         session = pos.database.session()
-        return session.query(Customer, Customer.name).all()
+        query = session.query(Customer, Customer.name)
+        if search is not None:
+            query = query.filter(Customer.name.like('%%%s%%'  % (search,)))
+        return query.all()
 
     def getChildren(self, parent):
         session = pos.database.session()
