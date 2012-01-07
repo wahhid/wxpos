@@ -78,11 +78,36 @@ class Ticket(pos.database.Base, common.Item):
     
     @hybrid_property
     def display(self):
-        return 'Ticket #'+str(self.id)
+        # TODO see if it is a good idea to use another way to number tickets..
+        """
+        base_36 = str_base(self.id, 36).upper()
+        display = ''
+        sep = 3
+        format_str = '{:0>'+str(sep)+'}'
+        for i in range(len(base_36), 0, -sep):
+            display = format_str.format(base_36[max(0, i-sep):i])+'-'+display
+        display = display[:-1] if len(display)>0 else ''
+        return '#'+display
+        """
+        return '#%d' % (self.id,)
     
     @display.expression
     def display(self):
-        return func.concat('Ticket #', self.id)
+        return func.concat('#', self.id)
     
     def __repr__(self):
         return "<Ticket %s>" % (self.id,)
+
+def digit_to_char(digit):
+    if digit < 10: return chr(ord('0') + digit)
+    else: return chr(ord('a') + digit - 10)
+
+def str_base(number,base):
+    if number < 0:
+        return '-' + str_base(-number,base)
+    else:
+        (d,m) = divmod(number,base)
+        if d:
+            return str_base(d,base) + digit_to_char(m)
+        else:
+            return digit_to_char(m)
