@@ -12,7 +12,14 @@ def init():
     if user_count > 0:
         login = LoginDialog(None)
         result = login.ShowModal()
-        return (user.current is not None)
+        if user.current is None:
+            return False
+        else:
+            # Filter menu items to display according to permissions
+            restrictions = [(mr.root, mr.item) for mr in user.current.menu_restrictions] 
+            for item in pos.menu.main.getItems():
+                item.children = [i for i in item.children if (item.label, i.label) in restrictions]
+            return True
     else:
         user.current = SuperUser()
         wx.MessageBox('No user found. Using Super User.\nCreate a user as soon as possible.\nUse F3 to login as superuser again.', 'Login', style=wx.ICON_INFORMATION | wx.OK)

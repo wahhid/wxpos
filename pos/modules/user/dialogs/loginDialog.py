@@ -17,6 +17,7 @@ class LoginDialog(wx.Dialog):
         # User
         self.userLbl = wx.StaticText(self.panel, -1, label='User')
         self.userList = UserCatalogList(self.panel)
+        self.userList.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnUserListActivate)
         
         # Password
         self.passwordLbl = wx.StaticText(self.panel, -1, label='Password')
@@ -64,6 +65,11 @@ class LoginDialog(wx.Dialog):
         self.__init_sizers()
 
         self.panel.SetValidator(LoginValidator())
+    
+    def OnUserListActivate(self, event):
+        event.Skip()
+        self.passwordTxt.SetFocus()
+        self.passwordTxt.SelectAll()
     
     def OnF3Command(self, event):
         event.Skip()

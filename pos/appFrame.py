@@ -42,32 +42,11 @@ class AppFrame(wx.Frame):
         Load the menu "root" items and "items" into the toolbook with the appropriate pages. 
         """
         self.mainToolbook.AssignImageList(pos.menu.il)
-        if pos.modules.isInstalled('user'):
-            import pos.modules.user.objects.user as user
-            from pos.modules.user.objects.superuser import SuperUser
-            
-            if isinstance(user.current, SuperUser):
-                # Ignore permissions if logged in as "superuser"
-                self._loadCompleteMenu()
-            else:
-                restrictions = [(mr.root, mr.item) for mr in user.current.menu_restrictions] 
-                for item in pos.menu.main.getItems():
-                    # Filter menu items to display according to permissions
-                    children = [i for i in item.children if (item.label, i.label) in restrictions]
-                    # Hide empty menu root items
-                    if len(children) == 0: continue
-                    page = self.getToolbookPage(children)
-                    self.mainToolbook.AddPage(imageId=item.image, page=page, select=False, text=item.label)
-        else:
-            self._loadCompleteMenu()
-        
-    def _loadCompleteMenu(self):
-        """
-        Load the complete menu into the main toolbook, ignoring any permissions set.
-        """
         for item in pos.menu.main.getItems():
+            # Hide empty menu root items
+            if len(item.children) == 0: continue
             page = self.getToolbookPage(item.children)
-            self.mainToolbook.AddPage(imageId=item.image, page=page, select=False, text=item.label)
+            self.mainToolbook.AddPage(imageId=item.image, page=page, select=False, text=item.label)        
 
     def getToolbookPage(self, items):
         """

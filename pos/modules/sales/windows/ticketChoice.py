@@ -21,7 +21,7 @@ class TicketChoice(wx.Choice):
             return None
 
     def getTicketLabel(self, t):
-        return 'Ticket #%.3d' % (t.id,)
+        return 'Ticket %s' % (t.display,)
 
     def updateList(self):
         choices = []
