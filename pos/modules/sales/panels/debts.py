@@ -4,7 +4,7 @@ import pos
 
 from pos.modules.sales.objects.ticket import Ticket
 
-from pos.modules.customer.windows import CustomerCatalogList
+from pos.modules.customer.windows import CustomerCatalog
 
 from ..dialogs import PayDialog
 
@@ -39,7 +39,7 @@ class DebtsPanel(wx.Panel):
         self.maxDebtLbl = wx.StaticText(self, -1, label='Max Debt')
         self.maxDebtTxt = wx.TextCtrl(self, -1, style=wx.TE_READONLY)
         
-        self.customerList = CustomerCatalogList(self)
+        self.customerList = CustomerCatalog(self)
         self.customerList.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnCustomerCatalogItemActivate)
 
         self.payBtn = wx.Button(self, -1, label='Pay')

@@ -4,20 +4,23 @@ import pos
 
 from pos.modules.user.objects.user import User
 
-from pos.modules.base.windows.catalogList import CatalogList
+from pos.modules.base.windows import Catalog
 
-class UserCatalogList(CatalogList):
-    def __init__(self, parent, show_hidden=False):
+class UserCatalog(Catalog):
+    def __init__(self, parent,
+                 show_all_item=True, show_search_box=True, show_hidden=False):
         self.show_hidden = show_hidden
-        CatalogList.__init__(self, parent,
+        Catalog.__init__(self, parent,
                              file_bmp=wx.Bitmap('images/user.png', wx.BITMAP_TYPE_PNG),
-                             show_all_item=False)
+                             show_all_item=show_all_item, show_search_box=show_search_box)
     
-    def getAll(self):
+    def getAll(self, search=None):
         session = pos.database.session()
         query = session.query(User, User.username)
         if not self.show_hidden:
             query = query.filter_by(hidden=False)
+        if search is not None:
+            query = query.filter(User.username.like('%%%s%%' % (search,)))
         return query.all()
     
     def getChildren(self, parent):

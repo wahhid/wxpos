@@ -3,8 +3,8 @@ import wx
 from .base import DatabaseConfigPanel
 
 class FirebirdConfigPanel(DatabaseConfigPanel):
-    def __init__(self, parent):
-        DatabaseConfigPanel.__init__(self, parent, 'db.firebird')
+    def __init__(self, parent, getProfile):
+        DatabaseConfigPanel.__init__(self, parent, getProfile)
         
         self.addParam('host', 'Host', wx.TextCtrl, required=False)
         self.addParam('port', 'Port', wx.TextCtrl, required=False)

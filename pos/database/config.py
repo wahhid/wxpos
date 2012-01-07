@@ -4,19 +4,10 @@ from sqlalchemy import exc
 from sqlalchemy.engine.url import URL
 
 # Define default database configuration for different RDBMS's
-pos.config.set_default('db', 'used', 'sqlite')
+pos.config.set_default('db', 'used', 'default')
 
-pos.config.set_default('db.sqlite', 'drivername', 'sqlite')
-pos.config.set_default('db.sqlite', 'database', 'wxpos.sqlite')
-
-pos.config.set_default('db.mysql', 'drivername', 'mysql')
-pos.config.set_default('db.mysql', 'query', repr({'charset': 'utf8'}))
-
-pos.config.set_default('db.postgresql', 'drivername', 'postgresql')
-
-pos.config.set_default('db.mssql', 'drivername', 'mssql')
-
-pos.config.set_default('db.firebird', 'drivername', 'firebird')
+pos.config.set_default('db.default', 'drivername', 'sqlite')
+pos.config.set_default('db.default', 'database', 'wxpos.sqlite')
 
 
 _url = None
