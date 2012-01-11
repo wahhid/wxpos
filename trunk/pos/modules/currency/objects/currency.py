@@ -38,6 +38,7 @@ default = None
 def get_default():
     global default
     currency_id = pos.config['mod.currency', 'default']
+    currency_id = None if currency_id == '' else currency_id
     if default is not None and currency_id == default[0]:
         return default[1]
     session = pos.database.session()

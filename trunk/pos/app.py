@@ -8,6 +8,10 @@ print '*Running on wxPython', wx.version()
 
 import pos
 
+pos.config.set_default('app', 'fullscreen', '')
+pos.config.set_default('app', 'first_run', '1')
+pos.config.set_default('app', 'pos_id', '0')
+
 print '*Creating menu...'
 import pos.menu
 pos.menu.init()
@@ -21,7 +25,7 @@ pos.modules.init()
 
 def goTo(root, item=None):
     root_index, item_index = 0, 0
-    mainToolbook = app.main.mainToolbook
+    mainToolbook = main.frame.mainToolbook
     for i in xrange(mainToolbook.GetPageCount()):
         if mainToolbook.GetPageText(i) == root:
             root_index = i
@@ -69,11 +73,14 @@ def runApp():
         if init is not None and not init:
             print '*Initiating module', mod.name, 'failed.'
             return False
-    app.main = AppFrame(None)
-    app.main.loadMenu()
+    main.frame = AppFrame(None)
+    main.frame.loadMenu()
     print '*Done.'
-    app.SetTopWindow(app.main)
-    app.main.Show()
+    main.SetTopWindow(main.frame)
+    if bool(pos.config['app', 'fullscreen']):
+        main.frame.ShowFullScreen(True, style=wx.FULLSCREEN_NOBORDER)
+    else:
+        main.frame.Show()
     return True
 
 def runConfig():
@@ -84,7 +91,7 @@ def runConfig():
     # Prompt the user to change database configuration
     from pos.modules.base.dialogs.dbconfig import ConfigDialog
     dlg = ConfigDialog(None)
-    app.SetTopWindow(dlg)
+    main.SetTopWindow(dlg)
     retCode = dlg.ShowModal()
     cont = (retCode == wx.ID_OK)
     if not cont:
@@ -117,27 +124,29 @@ def runConfig():
     print '*Done.'
     return False
 
-app = None
+main = None
 def run(config=False):
     """
     Main function to run the application.
     The config parameter specifies which mode to run the application in.
     """
-    global app
+    global main
     print '*Creating App instance...'
-    app = wx.App(redirect=False)
-    if config:
-        print '*Running config...'
-        ret = runConfig()
-    elif pos.config.empty():
+    main = wx.App(redirect=False)
+    if pos.config['app', 'first_run'] or pos.config.empty():
+        pos.config['app', 'first_run'] = ''
         # Force configuration if no configuration file is present.
+        pos.config.save_defaults(overwrite=False)
         print '*First run. Running config first...'
         ret = runConfig()
         ret = ret or runApp()
+    elif config:
+        print '*Running config...'
+        ret = runConfig()
     else:
         print '*Running app...'
         ret = runApp()
     # Run main loop only if a frame is persistently present.
     # It is not the case when the application is in configuration mode or 
     # modules' init() function return False for example.
-    if ret: app.MainLoop()
+    if ret: main.MainLoop()

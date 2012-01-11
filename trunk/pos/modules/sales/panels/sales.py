@@ -243,6 +243,8 @@ class SalesPanel(wx.Panel):
                 payment_method, paid = dlg.payment
                 t.pay(str(payment_method), bool(paid))
                 t.closed = True
+                evt = pos.Event('sales', pos.EVT_ACTION, action='ticket_paid', ticket=t, user=t.user)
+                pos.event_queue.send(evt)
                 self.setCurrentTicket(None)
 
     def OnCancelButton(self, event):

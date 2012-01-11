@@ -11,6 +11,8 @@ class MenuRoot:
         self.rel = rel
         self.priority = priority
         
+        self.enabled = True
+        
         self.children = []
         menu.addRoot(self)
     

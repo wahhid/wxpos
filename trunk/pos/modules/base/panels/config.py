@@ -3,6 +3,10 @@ import wx
 import pos
 import importlib
 
+from pos.modules.base.panels import FormPanel
+from pos.modules.base.objects import validator as base_validator
+from pos.modules.base.objects.formatter import TextFormatter
+
 class MainConfigPanel(wx.Panel):
     def _init_sizers(self):
         self.controlSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
@@ -31,6 +35,8 @@ class MainConfigPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1, style=wx.TAB_TRAVERSAL)
         
+        self.editing = False
+        
         self.listBook = wx.Listbook(self, -1)
         self.listBook.Bind(wx.EVT_LISTBOOK_PAGE_CHANGED, self.OnListbookPageChanged)
         
@@ -39,7 +45,7 @@ class MainConfigPanel(wx.Panel):
         
         self.panels = []
         self.panel_names = []
-        for mod in pos.modules.all():
+        for mod in pos.modules.all_wrappers():
             panels = importlib.import_module('pos.modules.'+mod.name+'.panels')
             if panels is not None and hasattr(panels, 'ModuleConfigPanel'):
                 panel = panels.ModuleConfigPanel(self.listBook)
@@ -51,7 +57,6 @@ class MainConfigPanel(wx.Panel):
                     self.listBook.AddPage(panel, '[%s]' % (mod.name,))
                 panel.TransferDataToWindow()
         
-        self.editing = False
         self.enableEditing(False)
 
     def enableEditing(self, enable):
@@ -72,7 +77,10 @@ class MainConfigPanel(wx.Panel):
 
     def saveChanges(self):
         name, panel = self.getSelectedPanel()
-        pos.config['mod.'+name] = panel.data
+        if hasattr(panel, 'section'):
+            pos.config[panel.section] = panel.data
+        else:
+            pos.config['mod.'+name] = panel.data
         pos.config.save()
 
     def OnListbookPageChanged(self, event):
@@ -99,3 +107,30 @@ class MainConfigPanel(wx.Panel):
         name, panel = self.getSelectedPanel()
         panel.TransferDataToWindow()
         self.enableEditing(False)
+
+class ModuleConfigPanel(FormPanel):
+    label = 'Main'
+    section = 'menu'
+    
+    def __init__(self, parent):
+        FormPanel.__init__(self, parent, -1, DataValidator)
+        
+        self.createField('Show empty root items', wx.CheckBox, 'show_empty_root_items', pos.config['menu', 'show_empty_root_items'])
+        self.createField('Show disabled items', wx.CheckBox, 'show_disabled_items', pos.config['menu', 'show_disabled_items'])
+        #self.createField('Open in fullscreen', wx.CheckBox, 'fullscreen', pos.config['app', 'fullscreen'])
+        self._init_fields()
+
+class DataValidator(base_validator.BaseValidator):
+    def GetWindowData(self):
+        win = self.GetWindow()
+        if self.key in ('show_empty_root_items', 'show_disabled_items'):
+            return '1' if win.IsChecked() else ''
+    
+    def ValidateWindowData(self, data):
+        return True
+    
+    def SetWindowData(self, data):
+        win = self.GetWindow()
+        if self.key in ('show_empty_root_items', 'show_disabled_items'):
+            value = pos.config['menu', self.key]
+            win.SetValue(bool(value))

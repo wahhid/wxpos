@@ -136,7 +136,7 @@ class AlphaNumericFormatter(StringFormatter):
 
 class TextFormatter(StringFormatter):
 	"""Alphanumeric characters only."""
-	re_validation = '^[a-zA-Z0-9 ]*$'
+	re_validation = '^[a-zA-Z0-9 \\.\\,\\-\\\']*$'
 
 class EmailFormatter(StringFormatter):
 	"""Internet email addresses (more or less)."""

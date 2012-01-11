@@ -4,6 +4,15 @@
 #########################
 
 base
+** each module should be able to have more than one ModuleConfigPanel or more sections to configure
+	i can think of the base module, but maybe some others with a part for appearance, a part for whatever...
+** add an pos.EVT_ACTION event that has a type and a certain module will watch for this kind of events
+		with type whatever, and do whatever with it when sent from wherever
+		one use of this is for quantity update in stock module, payments on item sold, on item returned, on debt payed, on customer added, on product list changed
+		there might also be a pos.EVT_REFRESH event to refresh lists like products, customers, ...
+		what other AS GENERAL AS POSSIBLE events ?
+** arrange the events system, already tested in the installer module
+** should not be able to enable/disable a module in installer if forced disable 
 
 currency
 
@@ -24,8 +33,20 @@ sales
 ** Cash drawer functionality
 ** Cash register functionality (close cash): cash difference, date open date close, user, etc...
 
-payments
+cashflow/payments
 ** payment: Provides the ability to add shop payments made for maintenance, salaries, stock buying or other expenses or incomes to keep track of cash flow.
+** cashflow:
+- value/currency
+- type, in/out
+- reason, foreign key
+- source, module name
+- user
+- date
+
+** cashflow-reasons: (added by each module)
+- product returned
+- item sold
+- debt settled
 
 taxes
 ** taxes: Useless for now.
