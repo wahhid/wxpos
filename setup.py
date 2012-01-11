@@ -15,7 +15,8 @@ except:
 from glob import glob
 data_files = [('images', glob('./images/*.*')),
               ('images/menu', glob('./images/menu/*.*')),
-              ('images/commands', glob('./images/commands/*.*')),]
+              ('images/commands', glob('./images/commands/*.*')),
+              ('reports', tuple())]
 
 # Scripts
 run = {'script': "wxPos.py",
@@ -30,17 +31,17 @@ options = {}
 # Options Py2Exe
 includes = []
 excludes = []
-packages = ["pos", "reportlab", "sqlalchemy", "MySQLdb", "sqlite3"]
+packages = ["pos", "reportlab", "sqlalchemy", "MySQLdb", "sqlite3", "wx"]
 py2exe_options = {"py2exe": {#"compressed": 0, 
                           #"optimize": 0,
                           "includes": includes,
                           "excludes": excludes,
                           "packages": packages,
                           #"dll_excludes": dll_excludes,
-                          #"bundle_files": 3,
+                          "bundle_files": 3,
                           "dist_dir": "dist",
                           #"xref": False,
-                          #"skip_archive": False,
+                          "skip_archive": True,
                           #"ascii": False,
                           #"custom_boot_script": '',
                          }

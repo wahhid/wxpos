@@ -1,6 +1,5 @@
 import pos
 
-from sqlalchemy import exc
 from sqlalchemy.engine.url import URL
 
 # Define default database configuration for different RDBMS's

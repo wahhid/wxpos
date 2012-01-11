@@ -7,4 +7,4 @@ from .dbconfig.postgresql import PostgreSQLConfigPanel
 from .dbconfig.mysql import MySQLConfigPanel
 from .dbconfig.sqlite import SqliteConfigPanel
 
-from .config import MainConfigPanel
+from .config import MainConfigPanel, ModuleConfigPanel

@@ -1,109 +1,197 @@
 import pos
+
+pos.config.set_default('mod', 'disabled_modules', '')
+
 import os, sys
 import pkgutil, importlib
+
+class Module:
+    name = None
+    dependencies = tuple()
+    config = []
+    
+    def __init__(self, base_name):
+        self.base_name = base_name
+        if self.name is None:
+            self.name = self.base_name.title()
+        
+        self.__bindings = {}
+        
+        for section, options in self.config:
+            for opt, val in options.iteritems():
+                pos.config.set_default(section, opt, val)
+        
+        self.event_handler()
+    
+    def load(self):
+        return []
+    
+    def test(self):
+        pass
+    
+    def menu(self):
+        return [[], []]
+    
+    def init(self):
+        return True
+    
+    def event_handler(self):
+        pass
+    
+    def bind_event(self, type_, callback):
+        self.__bindings[type_] = callback
+    
+    def handle_event(self, evt):
+        if evt.target is not None and self.base_name != self.type and \
+            not (type(evt.type) in (list, tuple) and self.base_name in evt.type):
+            return True
+        try:
+            callback = self.__bindings[evt.type]
+        except KeyError:
+            return True
+        return callback(evt)
+    
+    def __lt__(self, mod):
+        """
+        Implements the '<' comparison operator.
+        Used when sorting the list of modules, by dependencies.
+        """
+        return (self.base_name in mod.dependencies)
+    
+    def __repr__(self):
+        return '<Module %s>' % (self.base_name,)
 
 class ModuleWrapper:
     """
     Wrapper around the actual installed module.
     Provides functions to make common tasks easier.
     """
-    def __init__(self, pkg, parent):
-        self.name = pkg[1]
-        self.dependencies = []
+    def __init__(self, package):
+        self.package = package
+        self.name = package[1]
+        
+        self.loader = None
+        self.disabled = False
+        self.forced_disable = False
 
     def load(self):
         """
-        This will load the two main python modules:
-        - the main module which contains the init function
-        - the 'config' module which contains details for the configuration and loading of the module 
+        This will load the main module and initiate the ModuleLoader class 
         """
+        if self.disabled:
+            return False
         self.top_module = importlib.import_module('pos.modules.'+self.name)
-        self.config_module = importlib.import_module('.config', 'pos.modules.'+self.name)
-        self.dependencies = self.config_module.dependencies
-        return self.top_module is not None and self.config_module is not None
-
-    def load_database_objects(self):
-        """
-        Load this module's database objects for them to be usable in SQLAlchemy.
-        """
+        if self.top_module is None:
+            return False
         try:
-            load = self.config_module.load_database_objects
+            self.loader = self.top_module.ModuleLoader(self.name)
         except AttributeError:
             return False
+        all_modules.append(self)
+        return True
+    
+    def disable(self, missing_dependency=False):
+        global disabled_modules, missing_modules
+        self.disabled = True
+        sys.modules['pos.modules.'+self.name] = None
+        if missing_dependency:
+            self.forced_disable = True
+            missing_modules.append(self)
         else:
-            load()
-            return True
-
-    def init(self):
-        """
-        Calls the init function of this module.
-        Returns True if the app can continue loading, False if not, None if no init function is present.
-        """
-        try:
-            init = self.top_module.init
-        except AttributeError:
-            return
-        else:
-            return init()
-
-    def __lt__(self, mod):
-        """
-        Implements the '<' comparison operator.
-        Used when sorting the list of modules, by dependencies.
-        """
-        return (self.name in mod.dependencies)
+            self.forced_disable = False
+            disabled_modules.append(self)
+    
+    def uninstall(self):
+        raise NotImplementedError, 'Uninstall a module is not yet supported.'
     
     def __repr__(self):
         return '<ModuleWrapper %s>' % (self.name, )
 
-modules = []
+all_modules = []
+disabled_modules = []
+missing_modules = []
+missing_dependencies = set()
+module_loaders = []
+
 def init():
     """
     Load all the modules installed (main and config).
     """
-    global modules
+    global all_modules, disabled_modules, missing_dependencies, module_loaders
+    
+    disabled_str = pos.config['mod', 'disabled_modules']
+    disabled_names = disabled_str.split(',') if disabled_str != '' else []
+    
     print '*Loading modules...'
     modules_path = os.path.dirname(__file__)
+    # Package with names starting with '_' are ignored
     packages = [p for p in pkgutil.walk_packages([modules_path]) if not p[1].startswith('_') and p[2]]
 
-    modules = []
+    all_modules = []
+    disabled_modules = []
+    missing_modules = []
+    missing_dependencies = set()
+    module_loaders = []
+    
     for pkg in packages:
-        mod = ModuleWrapper(pkg, modules_path)
+        mod = ModuleWrapper(pkg)
+        if mod.name in disabled_names:
+            mod.disable()
+            continue
+        print '*Loading module', mod.name
         if not mod.load():
-            if mod.top_module is None:
-                print '*Invalid module', mod.name
-            else:
-                print '*No config module for', mod.name
-        else:
-            modules.append(mod)
-    print '*(%d) modules found: %s' % (len(modules), ', '.join([m.name for m in modules]))
-    checkDependencies()
-    modules.sort()
+            print '*Invalid module', mod.name
+    print '*(%d) modules found: %s' % (len(all_modules), ', '.join([m.name for m in all_modules]))
+    if disabled_modules:
+        print '*(%d) modules disabled: %s' % (len(disabled_modules), ', '.join([m.name for m in disabled_modules]))
+    _checkModuleDependencies()
+    if missing_modules:
+        print '*(%d) modules disabled for missing dependencies: %s' % (len(missing_modules), ', '.join([m.name for m in missing_modules]))
+    
+    module_loaders = [mod.loader for mod in all_modules]
+    module_loaders.sort()
 
-def checkDependencies():
-    """
-    Check that all the installed modules' dependencies are installed.
-    Else raise an exception to prevent the application from running.
-    """
+def _checkModuleDependencies():
     print '*Checking module dependencies...'
-    module_names = [mod.name for mod in modules]
-    for mod in modules:
-        missing = [mod_name for mod_name in mod.dependencies if mod_name not in module_names]
-        if len(missing)>0:
-            print '*** Missing dependencies for module', mod.name, ':', ', '.join(missing)
-            raise Exception, 'Missing dependency'
+    to_remove = []
+    module_names = set(mod.name for mod in all_modules)
+    for mod in all_modules:
+        missing = set(mod.loader.dependencies)-module_names
+        if missing:
+            missing_dependencies.update(missing)
+            print '*Missing dependencies for module', mod.name, ':', ', '.join(missing)
+            to_remove.append(mod)
+    if not to_remove: return
+    
+    def iter_to_remove(remove_list, remove_set=set()):
+        remove_set.update(remove_list)
+        for mod in remove_list:
+            used_in_set = set(m for m in all_modules if mod.name in m.loader.dependencies)
+            iter_to_remove(used_in_set - remove_set, remove_set)
+        return list(remove_set)
+    
+    [mod.disable(missing_dependency=True) for mod in iter_to_remove(to_remove)]
 
 def isInstalled(module_name):
     """
     Returns True if the module called module_name is installed.
     """
-    return (module_name in (mod.name for mod in modules))
+    for mod in all_modules:
+        if module_name == mod.name:
+            return True
+    return False
 
 def all():
     """
+    Returns a tuple of all the Module objects that are linked to all the actual modules installed.
+    """
+    return tuple(module_loaders)
+
+def all_wrappers():
+    """
     Returns a tuple of all the ModuleWrapper objects that are linked to all the actual modules installed.
     """
-    return tuple(modules)
+    return all_modules+disabled_modules+missing_modules
 
 # DATABASE EXTENSION
 
@@ -111,10 +199,10 @@ def loadDB():
     """
     Load all the database objects of every module so that they can be used with SQLAlchemy.
     """
-    for mod in modules:
-        print '*Loading DB Objects', mod.name
-        if not mod.load_database_objects():
-            print '*DB Objects missing'
+    for mod in module_loaders:
+        print '*Loading DB Objects', '%s.' % (mod.base_name,),
+        objects = mod.load()
+        print len(objects), 'found'
 
 def configDB():
     """
@@ -131,14 +219,9 @@ def configTestDB():
     Insert the test database values of every module installed.
     """
     print '*Adding test values to database...'
-    for mod in modules:
-        try:
-            test = mod.config_module.test_database_values
-        except AttributeError:
-            print '*DB Test Config missing', mod.name
-        else:
-            print '*Adding Test Values', mod.name
-            test()
+    for mod in module_loaders:
+        print '*Adding Test Values', mod.base_name
+        mod.test()
 
 # MENU EXTENSION
 
@@ -146,14 +229,16 @@ def extendMenu(menu):
     """
     Load all menu extensions of every module, meaning all the root items and sub-items defined.
     """
+    from pos.menu import MenuRoot, MenuItem
+    roots = []
     items = []
-    for mod in modules:
-        try:
-            item = mod.config_module.ModuleMenu
-        except AttributeError:
-            print '*Menu Extension missing', mod.name
-        else:
-            items.append(item(menu))
+    for mod in module_loaders:
+        mod_roots, mod_items = mod.menu()
+        roots.extend(mod_roots)
+        items.extend(mod_items)
+
+    for root in roots:
+        MenuRoot(menu, **root)
 
     for item in items:
-        item.loadSubItems()
+        MenuItem(menu, **item)

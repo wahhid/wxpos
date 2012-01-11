@@ -4,3 +4,6 @@ config = configuration.Config('wxpos.cfg')
 
 import pos.database as database
 import pos.modules as modules
+import pos.menu as menu
+
+from pos.events import *

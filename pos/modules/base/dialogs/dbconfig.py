@@ -64,7 +64,7 @@ class ConfigDialog(wx.Dialog):
             self.profiles.append('default')
         self.profileChoice.SetItems(self.profiles)
         
-        self.setProfile(pos.config['db', 'used'])
+        self.setProfile(pos.config['db', 'used'], save=False)
         self.profileChoice.SetStringSelection(self.profile)
 
     def addOption(self, name, label, panel):
@@ -74,7 +74,9 @@ class ConfigDialog(wx.Dialog):
     def getProfile(self):
         return self.profile
 
-    def setProfile(self, profile):
+    def setProfile(self, profile, save=True):
+        if save:
+            self.saveProfile()
         self.profile = profile
         
         self.removeProfileBtn.Enable(self.profile != 'default')
@@ -90,7 +92,27 @@ class ConfigDialog(wx.Dialog):
         
         for i in range(self.panelBook.GetPageCount()):
             panel = self.panelBook.GetPage(i)
+            panel.clear = (i == index)
             panel.TransferDataToWindow()
+
+    def saveProfile(self):
+        profile = self.nameTxt.GetValue()
+        if profile != self.profile and profile in self.profiles:
+            wx.MessageBox('A profile with this name already exists.', 'Error', style=wx.OK | wx.ICON_WARNING)
+            return
+        
+        pos.config['db.'+self.profile] = None
+        self.profile = profile    
+        
+        index = self.panelBook.GetSelection()
+        drivername = self.options[index]
+        panel = self.panelBook.GetPage(index)
+        
+        if panel.Validate():
+            pos.config['db.'+self.profile] = {'drivername': drivername}
+            if panel.TransferDataFromWindow():
+                return True
+        return False
 
     def OnProfileChoice(self, event):
         event.Skip()
@@ -103,12 +125,12 @@ class ConfigDialog(wx.Dialog):
         while profile in self.profiles:
             i += 1
             profile = 'profile%d' % (i,)
-        self.profiles.append(profile)
         
+        self.profiles.append(profile)
         self.profileChoice.SetItems(self.profiles)
         pos.config['db.'+profile] = pos.config['db.default']
-        self.setProfile(profile)
         
+        self.setProfile(profile)
         self.profileChoice.SetStringSelection(self.profile)
 
     def OnRemoveButton(self, event):
@@ -118,25 +140,12 @@ class ConfigDialog(wx.Dialog):
         self.profiles.remove(profile)
         self.profileChoice.SetItems(self.profiles)
         pos.config['db.'+profile] = None
-        self.setProfile('default')
         
+        self.setProfile('default', save=False)
         self.profileChoice.SetStringSelection(self.profile)
 
     def OnOkButton(self, event):
-        profile = self.nameTxt.GetValue()
-        if profile != self.profile and profile in self.profiles: return
-        
-        pos.config['db.'+self.profile] = None
-        self.profile = profile    
-        
-        drivername_index = self.panelBook.GetSelection()
-        drivername = self.options[drivername_index]
-        
-        index = self.panelBook.GetSelection()
-        panel = self.panelBook.GetPage(index)
-        if panel.Validate():
-            pos.config['db.'+self.profile] = {'drivername': drivername}
-            if panel.TransferDataFromWindow():
-                pos.database.config.use(self.profile)
-                pos.config.save()
-                event.Skip()
+        if self.saveProfile():
+            pos.database.config.use(self.profile)
+            pos.config.save()
+            event.Skip()

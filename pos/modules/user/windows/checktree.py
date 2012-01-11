@@ -45,9 +45,6 @@ class CheckTreeCtrl(wx.TreeCtrl):
         self.Bind(wx.EVT_LEFT_DOWN, self.__OnLeftDown)
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.__OnActivate, self)
         #self.Bind(wx.EVT_LEFT_DCLICK, self.__OnLeftDClick)
-        if not 'wxGTK' in wx.PlatformInfo:
-            self.Bind(wx.EVT_TREE_ITEM_EXPANDED, self.__OnItemExpanded, self)
-            self.Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.__OnItemCollapsed, self)
 
 
     def __MakeBitmap(self, bmp1, width, height):
@@ -205,29 +202,6 @@ class CheckTreeCtrl(wx.TreeCtrl):
 #        if not flags & wx.TREE_HITTEST_ONITEMICON:
 #            self.Toggle(item)
 #        evt.Skip()
-
-    def __OnItemExpanded(self, evt):
-        '''
-        non-wxGTK fix. Update check state when item expanded.
-        '''
-        item = evt.GetItem()
-        if item:
-            ischeck = self.IsItemChecked(item)
-            self.__CheckItem(item, ischeck)
-            self.__AutoCheckParent(item)
-        evt.Skip()
-
-    def __OnItemCollapsed(self, evt):
-        '''
-        non-wxGTK fix. Update check state when item expanded.
-        '''
-        item = evt.GetItem()
-        if item:
-            ischeck = self.IsItemChecked(item)
-            self.__CheckItem(item, ischeck)
-            self.__AutoCheckParent(item)
-        evt.Skip()
-
 
     def CheckItem(self, item, checked=True):
         '''

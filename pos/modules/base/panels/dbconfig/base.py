@@ -6,11 +6,10 @@ class DatabaseConfigPanel(wx.Panel):
     def addParam(self, name, label, wxObj, required=False, style=None):
         self.field_order.append(name)
         self.fields[name] = [None, None, None]
-        enabled = required
         
         self.fields[name][0] = wx.CheckBox(self, -1)
         self.fields[name][0].Bind(wx.EVT_CHECKBOX, lambda evt, n=name: self.OnCheckBox(evt, n))
-        self.fields[name][0].SetValue(enabled)
+        self.fields[name][0].SetValue(required)
         self.fields[name][0].Enable(not required)
         self.fields[name][1] = wx.StaticText(self, -1, label=label)
         if style is not None:
@@ -18,7 +17,7 @@ class DatabaseConfigPanel(wx.Panel):
         else:
             self.fields[name][2] = wxObj(self, -1)
         self.fields[name][2].SetValidator(self.validator(self, name))
-        self.fields[name][2].Enable(enabled)
+        self.fields[name][2].Enable(required)
         
     def getParam(self, name):
         return self.fields[name][2]
@@ -55,12 +54,18 @@ class ConfigValidator(wx.PyValidator):
 
     def TransferToWindow(self):
         win = self.GetWindow()
-        profile = self.panel.getProfile()
-        data = pos.config['db.'+profile, self.key]
-        
-        win.Enable(self.panel.fields[self.key][0].IsChecked() or data is not None)
-        self.panel.fields[self.key][0].SetValue(data is not None)
-        win.SetValue(data if data is not None else '')
+        required = not self.panel.fields[self.key][0].IsEnabled()
+        if self.panel.clear:
+            profile = self.panel.getProfile()
+            data = pos.config['db.'+profile, self.key]
+            
+            win.Enable(required or data is not None)
+            self.panel.fields[self.key][0].SetValue(required or data is not None)
+            win.SetValue(data if data is not None else '')
+        else:
+            win.Enable(required)
+            self.panel.fields[self.key][0].SetValue(required)
+            win.SetValue('')
         return True
 
     def TransferFromWindow(self):

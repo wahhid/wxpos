@@ -11,6 +11,8 @@ class MenuItem:
         self.label = label
         self.image_name = 'images/menu/'+self.parent.label+'-'+self.label+'.png'
         
+        self.enabled = True
+        
         self.page = page
 
     def __repr__(self):

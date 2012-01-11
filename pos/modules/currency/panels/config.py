@@ -48,7 +48,7 @@ class DataValidator(wx.PyValidator):
         win = self.GetWindow()
         if self.key == 'default':
             currency_id = pos.config['mod.currency', 'default']
-            if currency_id is not None:
+            if currency_id != '':
                 session = pos.database.session()
                 currency_name = session.query(Currency.name).filter_by(id=currency_id).one()[0]
                 win.SetStringSelection(currency_name)

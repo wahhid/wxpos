@@ -2,7 +2,6 @@ import wx
 
 import pos
 
-import pos.modules.user.objects.permission as permission
 from pos.modules.user.objects.permission import Permission, MenuRestriction
 
 from pos.modules.user.windows import CheckTreeCtrl, CT_AUTO_CHECK_CHILD
@@ -49,9 +48,9 @@ class DataValidator(base_validator.BaseValidator):
     
     def ValidateWindowData(self, data):
         if self.key == 'name':
-            return data != ''
+            return (data != '')
         elif self.key == 'menu_restrictions':
-            return len(data)>0
+            return (len(data)>0)
         return True
     
     def SetWindowData(self, data):
