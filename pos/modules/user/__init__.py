@@ -38,11 +38,13 @@ class ModuleLoader(Module):
         manager_role = Role(name='manager', permissions=manager_permissions)
         employee_role = Role(name='employee', permissions=employee_permissions)
     
+        super_user = User(username='Super', password='super', hidden=True, super=True)
         admin_user = User(username='Admin', password='admin', role=admin_role)
         manager_user = User(username='Manager', password='manager', role=manager_role)
         employee_user = User(username='Employee', password='employee', role=employee_role)
     
         session = pos.database.session()
+        session.add(super_user)
         session.add(admin_user)
         session.add(manager_user)
         session.add(employee_user)
@@ -66,7 +68,6 @@ class ModuleLoader(Module):
         from .dialogs import LoginDialog
         import pos.modules.user.objects.user as user
         from pos.modules.user.objects.user import User
-        from pos.modules.user.objects.superuser import SuperUser
         
         session = pos.database.session()
         user_count = session.query(User).count()
@@ -75,16 +76,28 @@ class ModuleLoader(Module):
             result = login.ShowModal()
             if user.current is None:
                 return False
-            elif isinstance(user.current, SuperUser):
+            elif user.current.super:
                 return True
             else:
                 # Filter menu items to display according to permissions
                 restrictions = [(mr.root, mr.item) for mr in user.current.menu_restrictions] 
-                for root in pos.menu.main.getItems():
+                for root in pos.menu.main.items:
                     for item in root.children:
                         item.enabled = ((root.label, item.label) in restrictions)
                 return True
         else:
-            user.current = SuperUser()
-            wx.MessageBox('No user found. Using Super User.\nCreate a user as soon as possible.\nUse F3 to login as superuser again.', 'Login', style=wx.ICON_INFORMATION | wx.OK)
+            user.current = User(username='_superuser_', password='_superuser_', hidden=True, super=True)
+            session.add(user.current)
+            session.commit()
+            message = '''No user found. Creating Super User.
+Create a normal user as soon as possible.
+Use F3 to login as superuser again:
+Username: _superuser_
+Password: _superuser_
+'''
+            wx.MessageBox(message, 'Login', style=wx.ICON_INFORMATION | wx.OK)
             return True
+
+    def config_panels(self):
+        from pos.modules.user.panels import UserConfigPanel 
+        return [UserConfigPanel]

@@ -70,7 +70,7 @@ class AppFrame(wx.Frame):
         show_disabled_items = pos.config['menu', 'show_disabled_items']
         self.mainToolbook.AssignImageList(pos.menu.il)
         
-        for root in pos.menu.main.getItems():
+        for root in pos.menu.main.items:
             if not root.enabled and not show_disabled_items:
                 continue
             enabled_children = [i for i in root.children if i.enabled]

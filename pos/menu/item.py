@@ -4,12 +4,15 @@ class MenuItem:
     directly inside the page of the main toolbook if alone.
     It always has a parent MenuRoot and a page associated to it.
     """
-    def __init__(self, menu, parent, label, page):
+    def __init__(self, menu, parent, label, page, rel=0, priority=-1):
         self.parent = menu.items[parent]
         self.parent.addChild(self)
         
         self.label = label
         self.image_name = 'images/menu/'+self.parent.label+'-'+self.label+'.png'
+        
+        self.rel = rel
+        self.priority = priority
         
         self.enabled = True
         

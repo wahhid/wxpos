@@ -5,7 +5,6 @@ import pos
 from sqlalchemy.orm import exc
 
 import pos.modules.user.objects.user as user
-from pos.modules.user.objects.superuser import SuperUser
 from pos.modules.user.objects.user import User
 
 from pos.modules.user.windows import UserCatalog
@@ -128,14 +127,11 @@ class HiddenUserLoginDialog(wx.Dialog):
     def OnOkButton(self, event):
         username = self.usernameTxt.GetValue()
         password = self.passwordTxt.GetValue()
-        if username == '_superuser_':
-            self.user = SuperUser()
-        else:
-            session = pos.database.session()
-            try:
-                self.user = session.query(User).filter(User.username == username).one()
-            except exc.NoResultFound, exc.MultipleResultsFound:
-                pass
+        session = pos.database.session()
+        try:
+            self.user = session.query(User).filter(User.username == username).one()
+        except exc.NoResultFound, exc.MultipleResultsFound:
+            pass
         if self.user is not None and self.user.login(password):
             self.success = True
             event.Skip()

@@ -3,6 +3,9 @@ from pos.modules import Module
 
 class ModuleLoader(Module):
     dependencies = ('base', 'currency', 'user', 'stock', 'customer')
+    config = [['mod.sales', {'main_panel_sash_position': '0',
+                             'main_panel_sash_mode': '1',
+                             'main_panel_sash_split': '1'}]]
     name = 'Sales and Debt Support'
 
     def load(self):
@@ -48,5 +51,5 @@ class ModuleLoader(Module):
         from pos.modules.sales.panels import DebtsPanel
             
         return [[],
-                [{'parent': 'Main', 'label': 'Sales', 'page': SalesPanel},
-                 {'parent': 'Main', 'label': 'Debts', 'page': DebtsPanel}]]
+                [{'parent': 'Main', 'label': 'Sales', 'page': SalesPanel, 'rel': 0, 'priority': 5},
+                 {'parent': 'Main', 'label': 'Debts', 'page': DebtsPanel, 'rel': 0, 'priority': 4}]]

@@ -5,13 +5,19 @@ class Menu:
     """
     def __init__(self):
         self.items = {}
+        self.done = False
 
-    def getItems(self):
+    def sort(self):
         """
-        Returns all the root items in the desired order, as close as possible
+        Sorts all the items in the desired order, as close as possible
         to the one requested from the modules.
         """
-        items = self.items.values()
+        self.done = True
+        self.items = self._order(self.items.values())
+        for root in self.items:
+            root.children = self._order(root.children)
+
+    def _order(self, items):
         grouped = [[] for j in range(len(items))]
         ordered = []
         for i in items:
@@ -23,6 +29,8 @@ class Menu:
         return ordered
     
     def addRoot(self, item):
+        if self.done:
+            raise RuntimeError, 'Cannot add root item to menu when already sorted'
         self.items[item.label] = item
     
     def __repr__(self):

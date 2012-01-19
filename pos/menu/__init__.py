@@ -40,7 +40,7 @@ def load():
     """
     global main, il
     il = wx.ImageList(24, 24, True)
-    for item in main.items.itervalues():
+    for item in main.items:
         for child in item.children:
             _loadImage(child)
         _loadImage(item)

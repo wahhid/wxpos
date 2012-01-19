@@ -56,3 +56,7 @@ class ModuleLoader(Module):
                 return c
             else:
                 return False
+    
+    def config_panels(self):
+        from pos.modules.currency.panels import CurrencyConfigPanel 
+        return [CurrencyConfigPanel]
