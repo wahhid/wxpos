@@ -117,7 +117,7 @@ def init():
     """
     Load all the modules installed (main and config).
     """
-    global all_modules, disabled_modules, missing_dependencies, module_loaders
+    global module_loaders
     
     disabled_str = pos.config['mod', 'disabled_modules']
     disabled_names = disabled_str.split(',') if disabled_str != '' else []
@@ -126,12 +126,6 @@ def init():
     modules_path = os.path.dirname(__file__)
     # Package with names starting with '_' are ignored
     packages = [p for p in pkgutil.walk_packages([modules_path]) if not p[1].startswith('_') and p[2]]
-
-    all_modules = []
-    disabled_modules = []
-    missing_modules = []
-    missing_dependencies = set()
-    module_loaders = []
     
     for pkg in packages:
         mod = ModuleWrapper(pkg)
@@ -148,7 +142,7 @@ def init():
     if missing_modules:
         print '*(%d) modules disabled for missing dependencies: %s' % (len(missing_modules), ', '.join([m.name for m in missing_modules]))
     
-    module_loaders = [mod.loader for mod in all_modules]
+    module_loaders = [mod.loader for mod in all_modules if not mod.disabled]
     module_loaders.sort()
 
 def _checkModuleDependencies():

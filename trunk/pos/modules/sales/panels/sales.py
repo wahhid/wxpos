@@ -47,7 +47,8 @@ class SalesPanel(wx.Panel):
         self.mainSizer.AddSizer(self.tActionSizer, (0, 1), (1, 1))
         self.mainSizer.Add(self.ticketList, (1, 1), (1, 1), flag=wx.EXPAND | wx.ALL)
         self.mainSizer.AddSizer(self.findSizer, (1, 2), flag=wx.ALIGN_BOTTOM)
-        self.mainSizer.Add(self.catalogBook, (2, 0), (1, 3), border=3, flag=wx.EXPAND | wx.ALL)
+        self.ticketPanel.SetSizer(self.mainSizer)
+        #self.mainSizer.Add(self.catalogBook, (2, 0), (1, 3), border=3, flag=wx.EXPAND | wx.ALL)
 
         #############################
         # T # TICKET ACTIONS        #
@@ -64,86 +65,94 @@ class SalesPanel(wx.Panel):
         
         self.mainSizer.AddGrowableCol(1, 1)
         self.mainSizer.AddGrowableRow(1, 1)
-        self.mainSizer.AddGrowableRow(2, 2)
+        #self.mainSizer.AddGrowableRow(2, 2)
+        
+        self.theSizer = wx.BoxSizer(orient=wx.VERTICAL)
+        self.theSizer.Add(self.splitter, 1, flag=wx.EXPAND | wx.ALL)
+        self.SetSizer(self.theSizer)
 
-        self.SetSizer(self.mainSizer)
+        #self.SetSizer(self.mainSizer)
 
     def _init_main(self):
+        self.splitter = wx.SplitterWindow(self, style=wx.SP_3D)
+        self.splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.OnSashChanged)
+        
+        self.ticketPanel = wx.Panel(self.splitter, -1)#, style=wx.SUNKEN_BORDER)
         ### Ticket actions ###
-        self.newBtn = wx.BitmapButton(self, -1,
+        self.newBtn = wx.BitmapButton(self.ticketPanel, -1,
                     bitmap=wx.Bitmap('./images/commands/add.png', wx.BITMAP_TYPE_PNG),
                     style=wx.BU_AUTODRAW)
         self.newBtn.Bind(wx.EVT_BUTTON, self.OnNewButton)
 
-        self.ticketChoice = TicketChoice(self)
+        self.ticketChoice = TicketChoice(self.ticketPanel)
         self.ticketChoice.Bind(wx.EVT_CHOICE, self.OnTicketChoice)
 
-        self.closeBtn = wx.BitmapButton(self, -1,
+        self.closeBtn = wx.BitmapButton(self.ticketPanel, -1,
                     bitmap=wx.Bitmap('./images/commands/load.png', wx.BITMAP_TYPE_PNG),
                     style=wx.BU_AUTODRAW)
         self.closeBtn.Bind(wx.EVT_BUTTON, self.OnCloseButton)
 
-        self.cancelBtn = wx.BitmapButton(self, -1,
+        self.cancelBtn = wx.BitmapButton(self.ticketPanel, -1,
                     bitmap=wx.Bitmap('./images/commands/cancel.png', wx.BITMAP_TYPE_PNG),
                     style=wx.BU_AUTODRAW)
         self.cancelBtn.Bind(wx.EVT_BUTTON, self.OnCancelButton)
 
         ### Ticket list ###
-        self.ticketList = TicketList(self)
+        self.ticketList = TicketList(self.ticketPanel)
         self.ticketList.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnTicketlineItemActivate)
         self.ticketList.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnTicketlineItemRightClick)
         self.ticketList.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnTicketlineItemSelect)
         self.ticketList.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.OnTicketlineItemDeselect)
         
         ### Ticketline actions ###
-        self.newTicketlineBtn = wx.BitmapButton(self, -1,
+        self.newTicketlineBtn = wx.BitmapButton(self.ticketPanel, -1,
                     bitmap=wx.Bitmap('./images/commands/add.png', wx.BITMAP_TYPE_PNG),
                     style=wx.BU_AUTODRAW)
         self.newTicketlineBtn.Bind(wx.EVT_BUTTON, self.OnNewTicketlineButton)
         
-        self.editBtn = wx.BitmapButton(self, -1,
+        self.editBtn = wx.BitmapButton(self.ticketPanel, -1,
                     bitmap=wx.Bitmap('./images/commands/edit.png', wx.BITMAP_TYPE_PNG),
                     style=wx.BU_AUTODRAW)
         self.editBtn.Bind(wx.EVT_BUTTON, self.OnEditButton)
 
-        self.plusBtn = wx.BitmapButton(self, -1,
+        self.plusBtn = wx.BitmapButton(self.ticketPanel, -1,
                     bitmap=wx.Bitmap('./images/plus.png', wx.BITMAP_TYPE_PNG),
                     style=wx.BU_AUTODRAW)
         self.plusBtn.Bind(wx.EVT_BUTTON, self.OnPlusButton)
         
-        self.minusBtn = wx.BitmapButton(self, -1,
+        self.minusBtn = wx.BitmapButton(self.ticketPanel, -1,
                     bitmap=wx.Bitmap('./images/minus.png', wx.BITMAP_TYPE_PNG),
                     style=wx.BU_AUTODRAW)
         self.minusBtn.Bind(wx.EVT_BUTTON, self.OnMinusButton)
 
         ### Find Product ###
-        self.codeLbl = wx.StaticText(self, -1, label='Barcode:')
-        self.codeTxt = wx.TextCtrl(self, -1, style=wx.TE_PROCESS_ENTER)
+        self.codeLbl = wx.StaticText(self.ticketPanel, -1, label='Barcode:')
+        self.codeTxt = wx.TextCtrl(self.ticketPanel, -1, style=wx.TE_PROCESS_ENTER)
         self.codeTxt.Bind(wx.EVT_TEXT_ENTER, self.OnCodeEnter)
 
-        self.findSep = wx.StaticLine(self, -1)
+        self.findSep = wx.StaticLine(self.ticketPanel, -1)
 
-        self.currencyLbl = wx.StaticText(self, -1, label='Currency:')
-        self.currencyChoice = wx.Choice(self, -1)
+        self.currencyLbl = wx.StaticText(self.ticketPanel, -1, label='Currency:')
+        self.currencyChoice = wx.Choice(self.ticketPanel, -1)
         self.currencyChoice.Bind(wx.EVT_CHOICE, self.OnCurrencyChoice)
 
-        self.customerLbl = wx.StaticText(self, -1, label='Customer:')
-        self.customerTxt = wx.TextCtrl(self, -1, style=wx.TE_READONLY)
+        self.customerLbl = wx.StaticText(self.ticketPanel, -1, label='Customer:')
+        self.customerTxt = wx.TextCtrl(self.ticketPanel, -1, style=wx.TE_READONLY)
 
-        self.discountLbl = wx.StaticText(self, -1, label='Discount:')
-        self.discountSpin = wx.SpinCtrl(self, -1, min=0, max=100)
+        self.discountLbl = wx.StaticText(self.ticketPanel, -1, label='Discount:')
+        self.discountSpin = wx.SpinCtrl(self.ticketPanel, -1, min=0, max=100)
         self.discountSpin.Bind(wx.EVT_TEXT, self.OnDiscountText)
 
-        self.totalLbl = wx.StaticText(self, -1, label='Total:')
-        self.totalTxt = wx.TextCtrl(self, -1, style=wx.TE_READONLY)
+        self.totalLbl = wx.StaticText(self.ticketPanel, -1, label='Total:')
+        self.totalTxt = wx.TextCtrl(self.ticketPanel, -1, style=wx.TE_READONLY)
         
-        #self.findBtn = wx.BitmapButton(self, -1,
+        #self.findBtn = wx.BitmapButton(self.ticketPanel, -1,
         #            bitmap=wx.Bitmap('./images/commands/search.png', wx.BITMAP_TYPE_PNG),
         #            style=wx.BU_AUTODRAW)
         #self.findBtn.Bind(wx.EVT_BUTTON, self.OnFindButton)
 
         ### Catalog ###
-        self.catalogBook = CatalogBook(self)
+        self.catalogBook = CatalogBook(self.splitter)
         self.catalogBook.products.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnProductCatalogItemActivate)
         self.catalogBook.customers.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnCustomerCatalogItemActivate)
     
@@ -158,12 +167,40 @@ class SalesPanel(wx.Panel):
 
         self._init_main()
         self._init_sizers()
-
+        
+        #self.theSizer.Layout()
+        
+        self.ticketPanel.Hide()
+        self.catalogBook.Hide()
+        
+        #self.splitter.Initialize(self.catalogBook)
+        self.splitter.Initialize(self.ticketPanel)
+        
+        position = int(pos.config['mod.sales', 'sash_position'])
+        mode = int(pos.config['mod.sales', 'sash_mode'])
+        split = bool(pos.config['mod.sales', 'sash_split'])
+        if not split:
+            wx.CallAfter(self.splitter.Unsplit)
+        elif mode == wx.SPLIT_HORIZONTAL:
+            wx.CallAfter(self.splitter.SplitHorizontally, self.ticketPanel, self.catalogBook, position)
+        else:
+            wx.CallAfter(self.splitter.SplitVertically, self.ticketPanel, self.catalogBook, position)
+        
         session = pos.database.session()
         currency_choices = session.query(Currency.symbol).all()
         self.currencyChoice.SetItems([c[0] for c in currency_choices])
 
         self.setCurrentTicket(None)
+
+    def OnSashChanged(self, event):
+        event.Skip()
+        position = self.splitter.GetSashPosition()
+        mode = self.splitter.GetSplitMode()
+        split = self.splitter.IsSplit()
+        pos.config['mod.sales', 'main_panel_sash_position'] = str(position)
+        pos.config['mod.sales', 'main_panel_sash_mode'] = str(mode)
+        pos.config['mod.sales', 'main_panel_sash_split'] = '1' if split else ''
+        pos.config.save()
 
     ### Ticket list ###
     def setCurrentTicket(self, t):
@@ -244,6 +281,9 @@ class SalesPanel(wx.Panel):
                 t.pay(str(payment_method), bool(paid))
                 t.closed = True
                 evt = pos.Event('sales', pos.EVT_ACTION, action='ticket_paid', ticket=t, user=t.user)
+                evt2 = pos.Event('sales', pos.EVT_ACTION, 'cashflow', action='income', value=t.total,
+                                 currency=t.currency, user=t.user)
+                pos.event_queue.send(evt2)
                 pos.event_queue.send(evt)
                 self.setCurrentTicket(None)
 

@@ -1,2 +1,2 @@
 from .currencies import CurrenciesPanel
-from .config import ModuleConfigPanel
+from .config import CurrencyConfigPanel

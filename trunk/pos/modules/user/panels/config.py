@@ -2,7 +2,7 @@ import wx
 
 import pos
 
-class ModuleConfigPanel(wx.Panel):
+class UserConfigPanel(wx.Panel):
     label = 'Users'
     
     def _init_sizers(self):

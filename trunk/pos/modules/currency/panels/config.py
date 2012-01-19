@@ -4,7 +4,7 @@ import pos
 
 from pos.modules.currency.objects.currency import Currency
 
-class ModuleConfigPanel(wx.Panel):
+class CurrencyConfigPanel(wx.Panel):
     label = 'Currency'
     
     def _init_sizers(self):

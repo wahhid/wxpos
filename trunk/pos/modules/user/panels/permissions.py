@@ -68,7 +68,7 @@ class DataValidator(base_validator.BaseValidator):
             win.DeleteAllItems()
             items = {}
             root = win.AddRoot('Menu')
-            for item in pos.menu.main.getItems():
+            for item in pos.menu.main.items:
                 parent = win.AppendItem(root, item.label)
                 for i in item.children:
                     child = win.AppendItem(parent, i.label)

@@ -63,9 +63,8 @@ def runApp():
     print '*Extending menu...'
     # Load appropriate menu items from all the modules
     pos.modules.extendMenu(pos.menu.main)
-    print '*Loading menu...'
-    # Create the image list once the wx.App is created and the menu fully extended
-    pos.menu.load()
+    pos.menu.main.sort()
+    
     print '*Initiating App...'
     # Initiate every installed module
     for mod in pos.modules.all():
@@ -73,6 +72,11 @@ def runApp():
         if init is not None and not init:
             print '*Initiating module', mod.name, 'failed.'
             return False
+    
+    print '*Loading menu...'
+    # Create the image list once the wx.App is created and the menu fully extended
+    pos.menu.load()
+    
     main.frame = AppFrame(None)
     main.frame.loadMenu()
     print '*Done.'

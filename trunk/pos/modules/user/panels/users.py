@@ -5,7 +5,6 @@ import pos
 import pos.modules.user.objects.user as user
 from pos.modules.user.objects.user import User
 from pos.modules.user.objects.role import Role
-from pos.modules.user.objects.permission import Permission
 
 from pos.modules.base.panels import ManagePanel
 from pos.modules.base.objects import validator as base_validator
@@ -37,7 +36,7 @@ class UsersPanel(ManagePanel):
         item = self.getCurrentItem()
         if item is None: return
         data = {'username': item.username, 'role': item.role,
-                 'permissions': item.role.permissions,
+                 'permissions': item.role.permissions if item.role is not None else [],
                  'password1': '', 'password2': '',
                  'passwordCheck': False}
         self.formPanel.fillForm(item=None, data=data)
@@ -68,10 +67,11 @@ class UsersPanel(ManagePanel):
 
     def OnRoleChoice(self, event):
         event.Skip()
-        role_txt = event.GetString()
-        session = pos.database.session()
-        r = session.query(Role).filter_by(display=role_txt).one()
-        self.getField('permissions').Set([p.display for p in r.permissions])
+        r = event.GetClientData()
+        if r is None:
+            self.getField('permissions').Set([])
+        else:
+            self.getField('permissions').Set([p.display for p in r.permissions])
 
     def OnPasswordCheckbox(self, event):
         event.Skip()
@@ -87,9 +87,11 @@ class DataValidator(base_validator.BaseValidator):
         elif self.key in ('password1', 'password2', 'passwordCheck'):
             return win.GetValue()
         elif self.key == 'role':
-            role_txt = win.GetStringSelection()
-            session = pos.database.session()
-            return session.query(Role).filter_by(display=role_txt).one()
+            selection = win.GetSelection()
+            if selection == 0:
+                return None
+            else:
+                return win.GetClientData(selection)
         elif self.key == 'permissions':
             return None
         elif self.key == 'hidden':
@@ -117,10 +119,13 @@ class DataValidator(base_validator.BaseValidator):
             win.Set([p.display for p in data])
         elif self.key == 'role':
             session = pos.database.session()
-            roles_txt = session.query(Role.display).all()
-            win.SetItems([r[0] for r in roles_txt])
+            items = session.query(Role.display, Role).all()
+            win.Clear()
+            win.Append('', None)
+            for r in items:
+                win.Append(r[0], r[1])
             if data is None:
-                win.SetSelection(-1)
+                win.SetSelection(0)
             else:
                 win.SetStringSelection(data.display)
         elif self.key == 'passwordCheck':

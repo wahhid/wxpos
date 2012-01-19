@@ -2,10 +2,6 @@ import wx
 
 import pos
 
-from pos.modules.base.panels import FormPanel
-from pos.modules.base.objects import validator as base_validator
-from pos.modules.base.objects.formatter import TextFormatter
-
 class MainConfigPanel(wx.Panel):
     def _init_sizers(self):
         self.controlSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
@@ -113,43 +109,3 @@ class MainConfigPanel(wx.Panel):
         name, panel = self.getSelectedPanel()
         panel.TransferDataToWindow()
         self.enableEditing(False)
-
-class MenuConfigPanel(FormPanel):
-    label = 'Main'
-    section = 'menu'
-    
-    def __init__(self, parent):
-        FormPanel.__init__(self, parent, -1, DataValidator)
-        
-        self.createField('Show empty root items', wx.CheckBox, 'show_empty_root_items', pos.config['menu', 'show_empty_root_items'])
-        self.createField('Show disabled items', wx.CheckBox, 'show_disabled_items', pos.config['menu', 'show_disabled_items'])
-        #self.createField('Open in fullscreen', wx.CheckBox, 'fullscreen', pos.config['app', 'fullscreen'])
-        self._init_fields()
-
-class AppConfigPanel(FormPanel):
-    label = 'Application'
-    section = 'app'
-    
-    def __init__(self, parent):
-        FormPanel.__init__(self, parent, -1, DataValidator)
-        
-        self.createField('Open in fullscreen', wx.CheckBox, 'fullscreen', pos.config['app', 'fullscreen'])
-        self._init_fields()
-
-class DataValidator(base_validator.BaseValidator):
-    def GetWindowData(self):
-        win = self.GetWindow()
-        if self.key in ('show_empty_root_items', 'show_disabled_items', 'fullscreen'):
-            return '1' if win.IsChecked() else ''
-    
-    def ValidateWindowData(self, data):
-        return True
-    
-    def SetWindowData(self, data):
-        win = self.GetWindow()
-        if self.key in ('show_empty_root_items', 'show_disabled_items'):
-            value = pos.config['menu', self.key]
-            win.SetValue(bool(value))
-        elif self.key == 'fullscreen':
-            value = pos.config['app', self.key]
-            win.SetValue(bool(value))

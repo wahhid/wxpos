@@ -23,7 +23,8 @@ class User(pos.database.Base, common.Item):
     username = Column(String(255), nullable=False, unique=True)
     encoded_password = Column('password', String(32), nullable=False)
     hidden = Column(Boolean, default=False)
-    role_id = Column(Integer, ForeignKey('roles.id'))
+    super = Column(Boolean, default=False)
+    role_id = Column(Integer, ForeignKey('roles.id'), nullable=True)
 
     role = relationship('Role', order_by="Role.id", backref="users")
 
