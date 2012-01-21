@@ -176,9 +176,9 @@ class SalesPanel(wx.Panel):
         #self.splitter.Initialize(self.catalogBook)
         self.splitter.Initialize(self.ticketPanel)
         
-        position = int(pos.config['mod.sales', 'sash_position'])
-        mode = int(pos.config['mod.sales', 'sash_mode'])
-        split = bool(pos.config['mod.sales', 'sash_split'])
+        position = int(pos.config['mod.sales', 'main_panel_sash_position'])
+        mode = int(pos.config['mod.sales', 'main_panel_sash_mode'])
+        split = bool(pos.config['mod.sales', 'main_panel_sash_split'])
         if not split:
             wx.CallAfter(self.splitter.Unsplit)
         elif mode == wx.SPLIT_HORIZONTAL:
