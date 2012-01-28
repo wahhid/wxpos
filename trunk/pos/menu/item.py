@@ -9,7 +9,7 @@ class MenuItem:
         self.parent.addChild(self)
         
         self.label = label
-        self.image_name = 'images/menu/'+self.parent.label+'-'+self.label+'.png'
+        self.image_name = './res/menu/images/%s.png' % ((self.parent.label+'-'+self.label).lower(),)
         
         self.rel = rel
         self.priority = priority

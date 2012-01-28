@@ -9,6 +9,7 @@ class Module:
     name = None
     dependencies = tuple()
     config = []
+    version = 0
     
     def __init__(self, base_name):
         self.base_name = base_name
@@ -172,6 +173,15 @@ def isInstalled(module_name):
     """
     for mod in all_modules:
         if module_name == mod.name:
+            return True
+    return False
+
+def isAvailable(module_name):
+    """
+    Returns True if the module called module_name is installed and enabled.
+    """
+    for mod in module_loaders:
+        if module_name == mod.base_name:
             return True
     return False
 

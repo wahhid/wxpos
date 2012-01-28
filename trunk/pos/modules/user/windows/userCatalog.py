@@ -11,7 +11,7 @@ class UserCatalog(Catalog):
                  show_all_item=True, show_search_box=True, show_hidden=False):
         self.show_hidden = show_hidden
         Catalog.__init__(self, parent,
-                             file_bmp=wx.Bitmap('images/user.png', wx.BITMAP_TYPE_PNG),
+                             file_bmp=wx.Bitmap('./res/user/images/user.png', wx.BITMAP_TYPE_PNG),
                              show_all_item=show_all_item, show_search_box=show_search_box)
     
     def getAll(self, search=None):

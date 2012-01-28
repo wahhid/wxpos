@@ -6,7 +6,7 @@ class MenuRoot:
     def __init__(self, menu, label, rel=0, priority=-1):
         self.menu = menu
         self.label = label
-        self.image_name = 'images/menu/'+self.label+'.png'
+        self.image_name = './res/menu/images/%s.png' % (self.label.lower(),)
         
         self.rel = rel
         self.priority = priority

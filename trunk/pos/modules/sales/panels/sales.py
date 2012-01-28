@@ -80,7 +80,7 @@ class SalesPanel(wx.Panel):
         self.ticketPanel = wx.Panel(self.splitter, -1)#, style=wx.SUNKEN_BORDER)
         ### Ticket actions ###
         self.newBtn = wx.BitmapButton(self.ticketPanel, -1,
-                    bitmap=wx.Bitmap('./images/commands/add.png', wx.BITMAP_TYPE_PNG),
+                    bitmap=wx.Bitmap('./res/base/images/add.png', wx.BITMAP_TYPE_PNG),
                     style=wx.BU_AUTODRAW)
         self.newBtn.Bind(wx.EVT_BUTTON, self.OnNewButton)
 
@@ -88,12 +88,12 @@ class SalesPanel(wx.Panel):
         self.ticketChoice.Bind(wx.EVT_CHOICE, self.OnTicketChoice)
 
         self.closeBtn = wx.BitmapButton(self.ticketPanel, -1,
-                    bitmap=wx.Bitmap('./images/commands/load.png', wx.BITMAP_TYPE_PNG),
+                    bitmap=wx.Bitmap('./res/base/images/load.png', wx.BITMAP_TYPE_PNG),
                     style=wx.BU_AUTODRAW)
         self.closeBtn.Bind(wx.EVT_BUTTON, self.OnCloseButton)
 
         self.cancelBtn = wx.BitmapButton(self.ticketPanel, -1,
-                    bitmap=wx.Bitmap('./images/commands/cancel.png', wx.BITMAP_TYPE_PNG),
+                    bitmap=wx.Bitmap('./res/base/images/cancel.png', wx.BITMAP_TYPE_PNG),
                     style=wx.BU_AUTODRAW)
         self.cancelBtn.Bind(wx.EVT_BUTTON, self.OnCancelButton)
 
@@ -106,22 +106,22 @@ class SalesPanel(wx.Panel):
         
         ### Ticketline actions ###
         self.newTicketlineBtn = wx.BitmapButton(self.ticketPanel, -1,
-                    bitmap=wx.Bitmap('./images/commands/add.png', wx.BITMAP_TYPE_PNG),
+                    bitmap=wx.Bitmap('./res/base/images/add.png', wx.BITMAP_TYPE_PNG),
                     style=wx.BU_AUTODRAW)
         self.newTicketlineBtn.Bind(wx.EVT_BUTTON, self.OnNewTicketlineButton)
         
         self.editBtn = wx.BitmapButton(self.ticketPanel, -1,
-                    bitmap=wx.Bitmap('./images/commands/edit.png', wx.BITMAP_TYPE_PNG),
+                    bitmap=wx.Bitmap('./res/base/images/edit.png', wx.BITMAP_TYPE_PNG),
                     style=wx.BU_AUTODRAW)
         self.editBtn.Bind(wx.EVT_BUTTON, self.OnEditButton)
 
         self.plusBtn = wx.BitmapButton(self.ticketPanel, -1,
-                    bitmap=wx.Bitmap('./images/plus.png', wx.BITMAP_TYPE_PNG),
+                    bitmap=wx.Bitmap('./res/sales/images/plus.png', wx.BITMAP_TYPE_PNG),
                     style=wx.BU_AUTODRAW)
         self.plusBtn.Bind(wx.EVT_BUTTON, self.OnPlusButton)
         
         self.minusBtn = wx.BitmapButton(self.ticketPanel, -1,
-                    bitmap=wx.Bitmap('./images/minus.png', wx.BITMAP_TYPE_PNG),
+                    bitmap=wx.Bitmap('./res/sales/images/minus.png', wx.BITMAP_TYPE_PNG),
                     style=wx.BU_AUTODRAW)
         self.minusBtn.Bind(wx.EVT_BUTTON, self.OnMinusButton)
 
@@ -147,7 +147,7 @@ class SalesPanel(wx.Panel):
         self.totalTxt = wx.TextCtrl(self.ticketPanel, -1, style=wx.TE_READONLY)
         
         #self.findBtn = wx.BitmapButton(self.ticketPanel, -1,
-        #            bitmap=wx.Bitmap('./images/commands/search.png', wx.BITMAP_TYPE_PNG),
+        #            bitmap=wx.Bitmap('./res/base/images/search.png', wx.BITMAP_TYPE_PNG),
         #            style=wx.BU_AUTODRAW)
         #self.findBtn.Bind(wx.EVT_BUTTON, self.OnFindButton)
 
