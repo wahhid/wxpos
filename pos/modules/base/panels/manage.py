@@ -36,7 +36,7 @@ class ManagePanel(wx.PyPanel):
         for b in btns:
             #self.controls[b[0]] = wx.Button(self, -1, label=b[0])
             self.controls[b[0]] = wx.BitmapButton(self, -1,
-                    bitmap=wx.Bitmap('./images/commands/'+b[1]+'.png', wx.BITMAP_TYPE_PNG),
+                    bitmap=wx.Bitmap('./res/base/images/'+b[1]+'.png', wx.BITMAP_TYPE_PNG),
                     style=wx.BU_AUTODRAW)
             self.controls[b[0]].Bind(wx.EVT_BUTTON, b[2])
         self.btns = map(lambda b: b[0], btns)

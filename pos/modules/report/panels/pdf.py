@@ -1,5 +1,7 @@
 import wx
 
+import pos
+
 import os
 
 from pos.modules.report.windows import DateRange
@@ -77,7 +79,8 @@ class PDFReportPanel(wx.Panel):
             from_date, to_date = self.dateRange.GetValue()
             parameters.update({'from_date': from_date, 'to_date': to_date})
 
-        filename = './reports/%s.pdf' % (self.getFilename(**parameters),)
+        report_dir = pos.config['mod.report', 'output_dir'] or './res/report/pdf'
+        filename = '%s/%s.pdf' % (report_dir, self.getFilename(**parameters),)
         filename = os.path.abspath(filename)
 
         doc = self.generateReport(filename, **parameters)

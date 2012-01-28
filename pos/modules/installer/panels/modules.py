@@ -1,8 +1,10 @@
 import wx
+
 import os
-import zipfile
 
 import pos
+
+from pos.modules.installer import utils
 
 class ModulesPanel(wx.Panel):
     def _init_sizers(self):
@@ -10,6 +12,8 @@ class ModulesPanel(wx.Panel):
         self.controlSizer.Add(self.exportBtn, 0, border=5, flag=wx.RIGHT | wx.LEFT)
         self.controlSizer.Add(self.enableBtn, 0, border=5, flag=wx.RIGHT | wx.LEFT)
         self.controlSizer.Add(self.disableBtn, 0, border=5, flag=wx.RIGHT | wx.LEFT)
+        self.controlSizer.Add(self.installBtn, 0, border=5, flag=wx.RIGHT | wx.LEFT)
+        self.controlSizer.Add(self.uninstallBtn, 0, border=5, flag=wx.RIGHT | wx.LEFT)
         
         self.mainSizer = wx.BoxSizer(orient=wx.VERTICAL)
         self.mainSizer.Add(self.modulesList, 1, border=10, flag=wx.EXPAND | wx.ALL)
@@ -28,16 +32,21 @@ class ModulesPanel(wx.Panel):
         self.exportBtn.Enable(False)
         self.exportBtn.Bind(wx.EVT_BUTTON, self.OnExportButton)
         
-        self.disableBtn = wx.Button(self, -1, 'Disable')
-        self.disableBtn.Enable(False)
-        self.disableBtn.Bind(wx.EVT_BUTTON, self.OnDisableButton)
-        
         self.enableBtn = wx.Button(self, -1, 'Enable')
         self.enableBtn.Enable(False)
         self.enableBtn.Bind(wx.EVT_BUTTON, self.OnEnableButton)
         
-        disabled_str = pos.config['mod', 'disabled_modules']
-        self.disabled = disabled_str.split(',') if disabled_str != '' else []
+        self.disableBtn = wx.Button(self, -1, 'Disable')
+        self.disableBtn.Enable(False)
+        self.disableBtn.Bind(wx.EVT_BUTTON, self.OnDisableButton)
+        
+        self.installBtn = wx.Button(self, -1, 'Install...')
+        self.installBtn.Bind(wx.EVT_BUTTON, self.OnInstallButton)
+        
+        self.uninstallBtn = wx.Button(self, -1, 'Uninstall')
+        self.uninstallBtn.Enable(False)
+        self.uninstallBtn.Bind(wx.EVT_BUTTON, self.OnUninstallButton)
+        
         self.headers = ['Module', 'Name', 'Dependencies', 'Enabled']
         
         for col, text in enumerate(self.headers):
@@ -48,8 +57,11 @@ class ModulesPanel(wx.Panel):
         self._init_sizers()
     
     def fillList(self, update=False):
+        disabled_str = pos.config['mod', 'disabled_modules']
+        disabled = disabled_str.split(',') if disabled_str != '' else []
+        
         self.modules_dict = dict([(mod.name, mod) for mod in pos.modules.all_wrappers()])
-        rows = [('['+mod.name+']' if mod.disabled else mod.name, mod.loader.name if mod.loader else 'None', ', '.join(mod.loader.dependencies) if mod.loader else 'None', str(mod.name not in self.disabled)) for mod in self.modules_dict.itervalues()]
+        rows = [('['+mod.name+']' if mod.disabled else mod.name, mod.loader.name if mod.loader else 'None', ', '.join(mod.loader.dependencies) if mod.loader else 'None', str(mod.name not in disabled)) for mod in self.modules_dict.itervalues()]
         if update:
             for index, item in enumerate(rows):
                 for col, text in enumerate(item):
@@ -75,47 +87,30 @@ class ModulesPanel(wx.Panel):
         return selected_indices
     
     def _enableModules(self, items, enable=None):
-        if enable is None:
-            for item in items:
-                name = self.modulesList.GetItemText(item, 0)
-                if name.startswith('['): name = name[1:-1]
-                if name in self.disabled:
-                    self.disabled.remove(name)
-                else:
-                    self.disabled.append(name)
-        elif enable:
-            for item in items:
-                name = self.modulesList.GetItemText(item, 0)
-                if name.startswith('['): name = name[1:-1]
-                try:
-                    self.disabled.remove(name)
-                except ValueError:
-                    pass
-        else:
-            for item in items:
-                name = self.modulesList.GetItemText(item, 0)
-                if name.startswith('['): name = name[1:-1]
-                if name not in self.disabled:
-                    self.disabled.append(name)
+        def get_name(item):
+            name = self.modulesList.GetItemText(item, 0)
+            return name[1:-1] if name.startswith('[') else name
+        mod_names = [get_name(item) for item in items]
         
-        pos.config['mod', 'disabled_modules'] = ','.join(self.disabled)
-        pos.config.save()
+        utils.enableModule(mod_names, enable)
         
         self.fillList(update=True)
     
     def OnModuleItemDeselected(self, event):
         event.Skip()
         selected_indices = self.getSelectedModules()
-        self.exportBtn.Enable(len(selected_indices)>0)
+        self.exportBtn.Enable(len(selected_indices) == 1)
         self.enableBtn.Enable(len(selected_indices)>0)
         self.disableBtn.Enable(len(selected_indices)>0)
+        self.uninstallBtn.Enable(len(selected_indices)>0)
     
     def OnModuleItemSelected(self, event):
         event.Skip()
         selected_indices = self.getSelectedModules()
-        self.exportBtn.Enable(len(selected_indices)>0)
+        self.exportBtn.Enable(len(selected_indices) == 1)
         self.enableBtn.Enable(len(selected_indices)>0)
         self.disableBtn.Enable(len(selected_indices)>0)
+        self.uninstallBtn.Enable(len(selected_indices)>0)
     
     def OnModuleItemActivated(self, event):
         event.Skip()
@@ -127,15 +122,59 @@ class ModulesPanel(wx.Panel):
         selected_indices = self.getSelectedModules()
         
         wildcard = "Zip file (*.zip)|*.zip|All files (*.*)|*.*"
-        dialog = wx.FileDialog(None, "Choose a zip file", os.getcwd(), "", wildcard, wx.SAVE)
+        dialog = wx.FileDialog(None, "Select the destination installer", os.getcwd(), "", wildcard, wx.SAVE)
         if dialog.ShowModal() == wx.ID_OK:
             target = dialog.GetPath()
+            name = self.modulesList.GetItemText(selected_indices[0], 0)
+            if name.startswith('['): name = name[1:-1]
 
-            z = zipfile.PyZipFile(target, 'w')
-            for item in selected_indices:
-                name = self.modulesList.GetItemText(item, 0)
-                z.writepy('pos/modules/'+name, 'pos/modules')
-            z.close()
+            retCode = wx.MessageBox('Export source also for %s?' % (name,), 'Export module', style=wx.YES_NO | wx.ICON_QUESTION)
+            export_source = (retCode == wx.YES)
+
+            mod = self.modules_dict[name]
+            utils.exportModule(mod, target, export_source=export_source)
+    
+    def OnInstallButton(self, event):
+        event.Skip()
+        
+        wildcard = "Zip file (*.zip)|*.zip|All files (*.*)|*.*"
+        dialog = wx.FileDialog(None, "Select the installer", os.getcwd(), "", wildcard, wx.OPEN)
+        if dialog.ShowModal() == wx.ID_OK:
+            target = dialog.GetPath()
+            info = utils.getInstallerInfo(target)
+            
+            if not info:
+                wx.MessageBox('Invalid module installer.', 'Install module', style=wx.OK | wx.ICON_INFORMATION)
+                return
+            else:
+                base_name, name, version = info
+            
+            retCode = wx.MessageBox('Install %s version %s?\n%s' % (base_name, version, name), 'Install module', style=wx.YES_NO | wx.ICON_QUESTION)
+            if retCode != wx.YES:
+                return
+ 
+            if pos.modules.isInstalled(base_name):
+                retCode = wx.MessageBox('%s is already installed. Do you want to replace it?' % (base_name,), 'Install module', style=wx.YES_NO | wx.ICON_QUESTION)
+                replace = (retCode == wx.YES)
+                utils.installModule(target, replace)
+            else:
+                utils.installModule(target, False)
+    
+    def OnUninstallButton(self, event):
+        event.Skip()
+        
+        selected_indices = self.getSelectedModules()
+        retCode = wx.MessageBox('Uninstall %d selected module(s)? This cannot be undone.' % (len(selected_indices)), 'Uninstall module', style=wx.YES_NO | wx.ICON_QUESTION)
+        if retCode != wx.YES:
+            return
+        
+        retCode = wx.MessageBox('Remove resources also? This cannot be undone.', 'Uninstall module', style=wx.YES_NO | wx.ICON_QUESTION)
+        remove_res = (retCode == wx.YES)
+        
+        for item in selected_indices:
+            name = self.modulesList.GetItemText(item, 0)
+            if name.startswith('['): name = name[1:-1]
+            utils.uninstallModule(name, remove_res)
 
     def OnEnableButton(self, event):
         event.Skip()
